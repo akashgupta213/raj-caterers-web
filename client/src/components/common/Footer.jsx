@@ -23,7 +23,7 @@ export default function Footer() {
         </div>
         <div>
           <h4 className="font-body text-label-caps uppercase tracking-widest mb-4 text-gold">Contact</h4>
-          <p className="text-body-sm opacity-80">123 Hospitality Lane<br/>Mumbai, India</p>
+          <p className="text-body-sm opacity-80">Gardani Bagh, Tahir Lane, Road no. - 16 <br/>Patna, Bihar, 800002</p>
           <p className="text-body-sm opacity-80 mt-2">+91 98765 43210<br/>hello@rajcaterers.com</p>
         </div>
       </div>

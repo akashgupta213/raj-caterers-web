@@ -7,7 +7,7 @@ export default function Contact() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div className="space-y-8">
           {[
-            { icon: "location_on", title: "Visit Us", text: "123 Hospitality Lane, Mumbai, India" },
+            { icon: "location_on", title: "Visit Us", text: "Gardani Bagh, Tahir Lane, Road no. - 16 <br/>Patna, Bihar, 800002" },
             { icon: "call", title: "Call", text: "+91 98765 43210" },
             { icon: "mail", title: "Email", text: "hello@rajcaterers.com" },
             { icon: "schedule", title: "Hours", text: "Mon–Sat, 10:00 – 19:00" },
