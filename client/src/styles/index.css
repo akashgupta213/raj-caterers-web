@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { font-family: "Montserrat", sans-serif; background: #fcf9f8; color: #1b1c1c; }
+h1, h2, h3, h4 { font-family: "Playfair Display", serif; }
+
+.glass-nav { background: rgba(252, 249, 248, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.hero-overlay { background: linear-gradient(to bottom, rgba(27,28,28,0.4), rgba(27,28,28,0.1)); }
+.premium-shadow { box-shadow: 0 20px 40px rgba(139, 76, 77, 0.05); }
+.image-placeholder { display:flex; align-items:center; justify-content:center; background:#f0eded; color:#7d7577; font-family:"Montserrat"; font-size:12px; letter-spacing:0.1em; font-weight:700; text-transform:uppercase; }
+input:focus, textarea:focus, select:focus { outline: none; border-bottom-color: #8b4c4d !important; }
