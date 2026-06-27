@@ -2,46 +2,50 @@ const Enquiry = require("../models/Enquiry.model");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 const { sendEmail } = require("../utils/sendEmail");
 
-// @desc    Submit an enquiry (public)
-// @route   POST /api/enquiries
-// @access  Public
 const createEnquiry = async (req, res) => {
   try {
-    const {
-      fullName, email, phone,
-      eventType, estimatedGuests,
-      preferredDate, message,
-    } = req.body;
+    const { fullName, email, phone, eventType, estimatedGuests, preferredDate, message } = req.body;
 
+    // Validate required fields manually for clear error messages
+    if (!fullName) return sendError(res, 400, "Full name is required");
+    if (!email)    return sendError(res, 400, "Email is required");
+    if (!eventType)return sendError(res, 400, "Event type is required");
+    if (!message)  return sendError(res, 400, "Message is required");
+
+    // Save to MongoDB first — always
     const enquiry = await Enquiry.create({
       fullName, email, phone,
       eventType, estimatedGuests,
       preferredDate, message,
     });
 
-    // Auto-reply to client
-    await sendEmail({
-      to:      email,
-      subject: "Thank you for reaching out – Raj Caterers",
-      template: "enquiryAutoReply",
-      data: { name: fullName, eventType },
-    });
+    // Send emails — non-blocking, won't crash if email fails
+    try {
+      await sendEmail({
+        to:       email,
+        subject:  "Thank you for reaching out – Raj Caterers",
+        template: "enquiryAutoReply",
+        data:     { name: fullName, eventType },
+      });
 
-    // Notify admin
-    await sendEmail({
-      to:      process.env.EMAIL_USER,
-      subject: `New Enquiry – ${eventType} | ${fullName}`,
-      template: "adminEnquiryAlert",
-      data: {
-        fullName, email, phone,
-        eventType, estimatedGuests,
-        preferredDate: preferredDate
-          ? new Date(preferredDate).toLocaleDateString("en-IN")
-          : "Not specified",
-        message,
-        enquiryId: enquiry._id,
-      },
-    });
+      await sendEmail({
+        to:       process.env.EMAIL_USER,
+        subject:  `New Enquiry – ${eventType} | ${fullName}`,
+        template: "adminEnquiryAlert",
+        data: {
+          fullName, email, phone, eventType,
+          estimatedGuests,
+          preferredDate: preferredDate
+            ? new Date(preferredDate).toLocaleDateString("en-IN")
+            : "Not specified",
+          message,
+          enquiryId: enquiry._id,
+        },
+      });
+    } catch (emailErr) {
+      // Email failed but enquiry is saved — just log it
+      console.error("Email send failed:", emailErr.message);
+    }
 
     return sendSuccess(res, 201, "Enquiry submitted successfully", enquiry);
   } catch (error) {
@@ -49,13 +53,9 @@ const createEnquiry = async (req, res) => {
   }
 };
 
-// @desc    Get all enquiries (admin)
-// @route   GET /api/enquiries
-// @access  Private
 const getAllEnquiries = async (req, res) => {
   try {
     const { page = 1, limit = 10, status, search } = req.query;
-
     const query = {};
     if (status) query.status = status;
     if (search) {
@@ -86,9 +86,6 @@ const getAllEnquiries = async (req, res) => {
   }
 };
 
-// @desc    Get single enquiry
-// @route   GET /api/enquiries/:id
-// @access  Private
 const getEnquiryById = async (req, res) => {
   try {
     const enquiry = await Enquiry.findById(req.params.id);
@@ -99,14 +96,10 @@ const getEnquiryById = async (req, res) => {
   }
 };
 
-// @desc    Update enquiry status / notes
-// @route   PUT /api/enquiries/:id
-// @access  Private
 const updateEnquiry = async (req, res) => {
   try {
     const enquiry = await Enquiry.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      req.params.id, req.body,
       { new: true, runValidators: true }
     );
     if (!enquiry) return sendError(res, 404, "Enquiry not found");
@@ -116,9 +109,6 @@ const updateEnquiry = async (req, res) => {
   }
 };
 
-// @desc    Delete enquiry
-// @route   DELETE /api/enquiries/:id
-// @access  Private
 const deleteEnquiry = async (req, res) => {
   try {
     const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
@@ -129,9 +119,6 @@ const deleteEnquiry = async (req, res) => {
   }
 };
 
-// @desc    Get enquiry stats
-// @route   GET /api/enquiries/stats
-// @access  Private
 const getEnquiryStats = async (req, res) => {
   try {
     const total      = await Enquiry.countDocuments();
@@ -153,10 +140,6 @@ const getEnquiryStats = async (req, res) => {
 };
 
 module.exports = {
-  createEnquiry,
-  getAllEnquiries,
-  getEnquiryById,
-  updateEnquiry,
-  deleteEnquiry,
-  getEnquiryStats,
+  createEnquiry, getAllEnquiries, getEnquiryById,
+  updateEnquiry, deleteEnquiry, getEnquiryStats,
 };
