@@ -4,7 +4,7 @@ import SectionHeading from "../components/common/SectionHeading";
 const FAQS = [
   { q: "How far in advance should I book?", a: "We recommend booking 3–6 months ahead for weddings and 4–6 weeks for corporate events." },
   { q: "Do you customize menus?", a: "Absolutely. Every menu is co-designed with our executive chef based on your theme, dietary needs, and preferences." },
-  { q: "What is your service area?", a: "We primarily serve Mumbai, Pune, and Goa, but travel pan-India for select events." },
+  { q: "What is your service area?", a: "We primarily serve Patna and the surrounding regions." },
   { q: "Do you cater dietary restrictions?", a: "Yes — vegan, gluten-free, Jain, halal, and allergen-aware menus are all available." },
   { q: "What is included in the per-plate price?", a: "Menu execution, service staff, basic tableware, and on-site coordination. Premium tableware and decor are add-ons." },
 ];

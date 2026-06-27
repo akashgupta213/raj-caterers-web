@@ -24,7 +24,7 @@ export default function Footer() {
         <div>
           <h4 className="font-body text-label-caps uppercase tracking-widest mb-4 text-gold">Contact</h4>
           <p className="text-body-sm opacity-80">Gardani Bagh, Tahir Lane, Road no. - 16 <br/>Patna, Bihar, 800002</p>
-          <p className="text-body-sm opacity-80 mt-2">+91 98765 43210<br/>hello@rajcaterers.com</p>
+          <p className="text-body-sm opacity-80 mt-2">+91 93341 27247<br/></p>
         </div>
       </div>
       <div className="border-t border-white/10 py-6 text-center text-body-sm opacity-70">
