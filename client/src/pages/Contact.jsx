@@ -30,7 +30,7 @@ const CONTACT_INFO = [
 export default function Contact() {
   return (
     <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-      <SectionHeading eyebrow="Get in Touch" title="Contact Us" />
+      <SectionHeading eyebrow="Get in Touch" title="Contact Us Anytime" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left: contact info */}
