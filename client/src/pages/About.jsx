@@ -31,7 +31,7 @@ export default function About() {
         <SectionHeading eyebrow="Meet the Team" title="The Visionaries" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
           {[
-            { name: "Raj Khanna", role: "Founder" },
+            { name: "Raj Kumar Gupta", role: "Founder" },
             { name: "Chef Meera", role: "Executive Chef" },
             { name: "Aditya Roy", role: "Events Director" },
             { name: "Sneha Iyer", role: "Hospitality Lead" },
