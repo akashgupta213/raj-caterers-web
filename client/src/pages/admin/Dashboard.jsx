@@ -4,21 +4,26 @@ import StatCard from "../../components/admin/StatCard";
 import RevenueChart from "../../components/admin/RevenueChart";
 import BookingTable from "../../components/admin/BookingTable";
 import EnquiryTable from "../../components/admin/EnquiryTable";
-import { fetchBookingStats, fetchBookings, fetchEnquiries, fetchClientStats } from "../../utils/api";
+import { fetchBookingStats, fetchBookings, fetchEnquiries, fetchClientStats, fetchEnquiryStats } from "../../utils/api";
 
 const fmt = (n) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${n.toLocaleString("en-IN")}`;
 
 export default function Dashboard() {
-  const [stats,    setStats]    = useState(null);
-  const [recent,   setRecent]   = useState([]);
-  const [enquiries,setEnquiries]= useState([]);
-  const [clients,  setClients]  = useState(null);
+  const [stats,        setStats]        = useState(null);
+  const [recent,       setRecent]       = useState([]);
+  const [enquiries,    setEnquiries]    = useState([]);
+  const [clients,      setClients]      = useState(null);
+  const [enquiryStats, setEnquiryStats] = useState(null);
 
   useEffect(() => {
-    fetchBookingStats().then(setStats);
-    fetchBookings().then((b) => setRecent(b.slice(0, 5)));
-    fetchEnquiries().then((e) => setEnquiries(e.slice(0, 5)));
-    fetchClientStats().then(setClients);
+    fetchBookingStats().then(setStats).catch(console.error);
+    fetchBookings().then((b) => setRecent(b.slice(0, 5))).catch(console.error);
+    fetchEnquiries().then((e) => {
+  const sorted = [...e].sort((a, b) => new Date(a.preferredDate) - new Date(b.preferredDate));
+  setEnquiries(sorted.slice(0, 5));
+}).catch(console.error);
+    fetchClientStats().then(setClients).catch(console.error);
+    fetchEnquiryStats().then(setEnquiryStats).catch(console.error);
   }, []);
 
   return (
@@ -31,12 +36,14 @@ export default function Dashboard() {
             <p className="font-body text-body-sm text-on-surface-variant">Welcome back, here's today's snapshot.</p>
           </div>
         </header>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-8">
-          <StatCard icon="event"             label="Bookings"      value={stats   ? String(stats.totalBookings)  : "—"} trend="" />
-          <StatCard icon="payments"          label="Revenue"       value={stats   ? fmt(stats.totalRevenue)      : "—"} trend="" />
-          <StatCard icon="groups"            label="Clients"       value={clients ? String(clients.total)        : "—"} trend="" />
-          <StatCard icon="mark_email_unread" label="New Enquiries" value={stats   ? String(stats.pendingBookings): "—"} trend="" />
+          <StatCard icon="event"             label="Bookings"      value={stats        ? String(stats.totalBookings)   : "—"} trend="" />
+          <StatCard icon="payments"          label="Revenue"       value={stats        ? fmt(stats.totalRevenue)       : "—"} trend="" />
+          <StatCard icon="groups"            label="Clients"       value={clients      ? String(clients.total)         : "—"} trend="" />
+          <StatCard icon="mark_email_unread" label="New Enquiries" value={enquiryStats ? String(enquiryStats.newCount) : "—"} trend="" />
         </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-8">
           <div className="lg:col-span-2"><RevenueChart monthlyData={stats?.monthlyData} /></div>
           <div className="bg-surface-container-lowest rounded-xl p-6 premium-shadow">
@@ -48,8 +55,10 @@ export default function Dashboard() {
             </ul>
           </div>
         </div>
+
         <h2 className="font-display text-title-lg text-primary mb-4">Recent Bookings</h2>
         <div className="mb-8"><BookingTable rows={recent} /></div>
+
         <h2 className="font-display text-title-lg text-primary mb-4">Latest Enquiries</h2>
         <EnquiryTable rows={enquiries} />
       </main>

@@ -78,4 +78,7 @@ export const fetchEnquiries = () =>
 export const updateEnquiry = (id, body) =>
   api.put(`/enquiries/${id}`, body).then((r) => r.data.data);
 
+export const fetchEnquiryStats = () =>
+  api.get("/enquiries/stats").then((r) => r.data.data);
+
 export default api;
