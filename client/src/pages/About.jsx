@@ -32,7 +32,7 @@ export default function About() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
           {[
             { name: "Raj Kumar Gupta", role: "Founder" },
-            { name: "Chef Meera", role: "Executive Chef" },
+            { name: "Vishal Kumar", role: "Co-Founder" },
             { name: "Aditya Roy", role: "Events Director" },
             { name: "Sneha Iyer", role: "Hospitality Lead" },
           ].map(m => <TeamCard key={m.name} {...m} />)}
