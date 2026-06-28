@@ -33,8 +33,8 @@ export default function About() {
           {[
             { name: "Raj Kumar Gupta", role: "Founder" },
             { name: "Vishal Kumar", role: "Co-Founder" },
-            { name: "Ritab Lal", role: "Director" },
-            { name: "Basant lal", role: "Hospitality Lead" },
+            { name: "Ritab Lal", role: "Operation Manager" },
+            { name: "Basant Lal", role: "Executive Chef" },
           ].map(m => <TeamCard key={m.name} {...m} />)}
         </div>
       </section>
