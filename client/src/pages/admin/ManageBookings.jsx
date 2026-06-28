@@ -1,14 +1,20 @@
+import { useState } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import BookingTable from "../../components/admin/BookingTable";
 import { useBookings } from "../../hooks/useBookings";
+import { updateBooking } from "../../utils/api";
+
+const FILTERS = ["All", "Pending", "Confirmed", "In Progress", "Completed", "Cancelled"];
 
 export default function ManageBookings() {
-  const { bookings, loading } = useBookings();
-  const fallback = [
-    { id: 1, clientName: "The Sharmas", eventType: "Wedding", date: Date.now(), guests: 350, amount: 770000, status: "Confirmed" },
-    { id: 2, clientName: "Acme Corp", eventType: "Corporate", date: Date.now(), guests: 120, amount: 240000, status: "Pending" },
-    { id: 3, clientName: "Mehra Family", eventType: "Anniversary", date: Date.now(), guests: 80, amount: 160000, status: "Cancelled" },
-  ];
+  const [activeFilter, setActiveFilter] = useState("All");
+  const { bookings, loading, refresh } = useBookings(activeFilter);
+
+  const handleStatusChange = async (id, status) => {
+    await updateBooking(id, { status });
+    refresh();
+  };
+
   return (
     <div className="flex">
       <Sidebar />
@@ -17,12 +23,24 @@ export default function ManageBookings() {
           <h1 className="font-display text-headline-md text-primary">Manage Bookings</h1>
           <button className="bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-label-caps uppercase">+ New Booking</button>
         </header>
-        <div className="flex gap-3 mb-6">
-          {["All", "Pending", "Confirmed", "Cancelled"].map(t => (
-            <button key={t} className="px-4 py-2 rounded-full border border-outline-variant font-body text-label-caps uppercase text-on-surface-variant hover:border-secondary">{t}</button>
+        <div className="flex gap-3 mb-6 flex-wrap">
+          {FILTERS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setActiveFilter(t)}
+              className={`px-4 py-2 rounded-full border font-body text-label-caps uppercase transition ${
+                activeFilter === t
+                  ? "border-secondary text-secondary"
+                  : "border-outline-variant text-on-surface-variant hover:border-secondary"
+              }`}
+            >
+              {t}
+            </button>
           ))}
         </div>
-        <BookingTable rows={loading || !bookings.length ? fallback : bookings} />
+        {loading
+          ? <p className="font-body text-body-sm text-on-surface-variant">Loading...</p>
+          : <BookingTable rows={bookings} onStatusChange={handleStatusChange} />}
       </main>
     </div>
   );

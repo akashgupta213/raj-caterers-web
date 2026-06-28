@@ -9,11 +9,11 @@ export default function EnquiryTable({ rows = [] }) {
         <tbody>
           {rows.map(r => (
             <tr key={r._id || r.id} className="border-t border-outline-variant text-body-sm">
-              <td className="px-6 py-4 font-medium text-primary">{r.name}</td>
+              <td className="px-6 py-4 font-medium text-primary">{r.fullName}</td>
               <td className="px-6 py-4">{r.email}</td>
               <td className="px-6 py-4">{r.eventType}</td>
-              <td className="px-6 py-4">{r.date ? formatDate(r.date) : "—"}</td>
-              <td className="px-6 py-4">{r.guests}</td>
+              <td className="px-6 py-4">{r.preferredDate ? formatDate(r.preferredDate) : "—"}</td>
+              <td className="px-6 py-4">{r.estimatedGuests}</td>
               <td className="px-6 py-4"><button className="text-secondary hover:underline">Reply</button></td>
             </tr>
           ))}

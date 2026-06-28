@@ -11,9 +11,9 @@ export default function BookingTable({ rows = [] }) {
             <tr key={r._id || r.id} className="border-t border-outline-variant text-body-sm">
               <td className="px-6 py-4 font-medium text-primary">{r.clientName}</td>
               <td className="px-6 py-4">{r.eventType}</td>
-              <td className="px-6 py-4">{formatDate(r.date)}</td>
-              <td className="px-6 py-4">{r.guests}</td>
-              <td className="px-6 py-4">{formatCurrency(r.amount || 0)}</td>
+              <td className="px-6 py-4">{formatDate(r.eventDate)}</td>
+              <td className="px-6 py-4">{r.guestsCount}</td>
+              <td className="px-6 py-4">{formatCurrency(r.totalAmount || 0)}</td>
               <td className="px-6 py-4">
                 <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${r.status === "Confirmed" ? "bg-tertiary-container text-on-tertiary-container" : r.status === "Pending" ? "bg-secondary-fixed text-on-secondary-container" : "bg-error-container text-on-error-container"}`}>{r.status}</span>
               </td>
