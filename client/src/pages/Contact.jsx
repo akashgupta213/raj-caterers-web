@@ -16,8 +16,8 @@ const CONTACT_INFO = [
   {
     icon: "mail",
     title: "Email",
-    text: "hello@rajcaterers.com",
-    href: "mailto:hello@rajcaterers.com",
+    text: "rajudecorator@gmail.com",
+    href: "mailto:rajudecorator@gmail.com",
   },
   {
     icon: "schedule",
@@ -31,7 +31,6 @@ export default function Contact() {
   return (
     <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
       <SectionHeading eyebrow="Get in Touch" title="Contact Us Anytime" />
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         {/* Left: contact info */}
         <div className="space-y-8">
