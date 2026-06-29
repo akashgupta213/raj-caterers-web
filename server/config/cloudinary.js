@@ -8,23 +8,23 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Gallery storage
+// Gallery upload storage
 const galleryStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "raj-caterers/gallery",
+  params: async (req, file) => ({
+    folder:         `raj-caterers/gallery/${req.body.section || "general"}`,
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 1200, crop: "limit", quality: "auto" }],
-  },
+    transformation: [{ width: 1920, height: 1080, crop: "limit", quality: "auto" }],
+  }),
 });
 
-// Menu item storage
+// Menu upload storage
 const menuStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "raj-caterers/menu",
+    folder:          "raj-caterers/menu",
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 800, crop: "limit", quality: "auto" }],
+    transformation:  [{ width: 800, height: 800, crop: "fill", quality: "auto" }],
   },
 });
 

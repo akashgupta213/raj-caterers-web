@@ -2,23 +2,20 @@ const mongoose = require("mongoose");
 
 const gallerySchema = new mongoose.Schema(
   {
-    title:       { type: String, required: true, trim: true },
-    description: { type: String, trim: true },
-    imageUrl:    { type: String, required: true },
-    publicId:    { type: String, required: true },
-    category: {
+    imageUrl:   { type: String, required: true },
+    publicId:   { type: String, required: true }, // cloudinary public_id for deletion
+    section: {
       type: String,
       required: true,
-      enum: ["Wedding", "Engagement", "Birthday", "Corporate", "Private Dining", "Social Soiree", "Food"],
+      enum: ["hero", "wedding", "engagement", "birthday", "corporate", "private_dining", "social", "about"],
     },
-    tags:       [{ type: String }],
-    isFeatured: { type: Boolean, default: false },
-    sortOrder:  { type: Number, default: 0 },
+    caption:    { type: String, trim: true },
+    order:      { type: Number, default: 0 }, // for serial ordering
+    isActive:   { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-gallerySchema.index({ category: 1 });
-gallerySchema.index({ isFeatured: 1 });
+gallerySchema.index({ section: 1, order: 1 });
 
 module.exports = mongoose.model("Gallery", gallerySchema);

@@ -2,128 +2,83 @@ const MenuItem   = require("../models/MenuItem.model");
 const { cloudinary } = require("../config/cloudinary");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
-// @desc    Get all menu items (public)
-// @route   GET /api/menu
-// @access  Public
-const getAllMenuItems = async (req, res) => {
+// @route POST /api/menu  (admin)
+const createItem = async (req, res) => {
   try {
-    const { category, cuisine, dietaryTag, featured, search } = req.query;
+    const { name, description, price, category, dietary, order } = req.body;
 
-    const query = { isAvailable: true };
-    if (category)   query.category = category;
-    if (cuisine)    query.cuisine  = cuisine;
-    if (dietaryTag) query.dietaryTags = dietaryTag;
-    if (featured === "true") query.isFeatured = true;
-    if (search) {
-      query.$text = { $search: search };
-    }
-
-    const items = await MenuItem.find(query).sort({ category: 1, sortOrder: 1 });
-
-    // Group by category
-    const grouped = items.reduce((acc, item) => {
-      if (!acc[item.category]) acc[item.category] = [];
-      acc[item.category].push(item);
-      return acc;
-    }, {});
-
-    return sendSuccess(res, 200, "Menu items fetched", { items, grouped });
-  } catch (error) {
-    return sendError(res, 500, error.message);
-  }
-};
-
-// @desc    Create menu item (admin)
-// @route   POST /api/menu
-// @access  Private
-const createMenuItem = async (req, res) => {
-  try {
-    const {
-      name, description, category, cuisine,
-      dietaryTags, pricePerPlate, isAvailable,
-      isFeatured, sortOrder,
-    } = req.body;
-
-    const data = {
-      name, description, category, cuisine,
-      dietaryTags: dietaryTags ? JSON.parse(dietaryTags) : [],
-      pricePerPlate,
-      isAvailable:  isAvailable  !== "false",
-      isFeatured:   isFeatured   === "true",
-      sortOrder:    sortOrder || 0,
-    };
-
-    if (req.file) {
-      data.imageUrl = req.file.path;
-      data.publicId = req.file.filename;
-    }
-
-    const item = await MenuItem.create(data);
+    const item = await MenuItem.create({
+      name, description,
+      price:    Number(price),
+      category,
+      dietary:  dietary ? JSON.parse(dietary) : [],
+      order:    order ? Number(order) : 0,
+      imageUrl: req.file?.path || "",
+      publicId: req.file?.filename || "",
+    });
 
     return sendSuccess(res, 201, "Menu item created", item);
-  } catch (error) {
-    return sendError(res, 500, error.message);
+  } catch (err) {
+    return sendError(res, 500, err.message);
   }
 };
 
-// @desc    Update menu item (admin)
-// @route   PUT /api/menu/:id
-// @access  Private
-const updateMenuItem = async (req, res) => {
+// @route GET /api/menu?category=Appetizers
+const getItems = async (req, res) => {
   try {
-    const existing = await MenuItem.findById(req.params.id);
-    if (!existing) return sendError(res, 404, "Menu item not found");
+    const filter = { isActive: true };
+    if (req.query.category) filter.category = req.query.category;
 
-    const updateData = { ...req.body };
-
-    if (req.file) {
-      // Delete old image from Cloudinary
-      if (existing.publicId) {
-        await cloudinary.uploader.destroy(existing.publicId);
-      }
-      updateData.imageUrl = req.file.path;
-      updateData.publicId = req.file.filename;
-    }
-
-    if (updateData.dietaryTags && typeof updateData.dietaryTags === "string") {
-      updateData.dietaryTags = JSON.parse(updateData.dietaryTags);
-    }
-
-    const item = await MenuItem.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    return sendSuccess(res, 200, "Menu item updated", item);
-  } catch (error) {
-    return sendError(res, 500, error.message);
+    const items = await MenuItem.find(filter).sort({ order: 1, createdAt: 1 });
+    return sendSuccess(res, 200, "Menu items fetched", items);
+  } catch (err) {
+    return sendError(res, 500, err.message);
   }
 };
 
-// @desc    Delete menu item (admin)
-// @route   DELETE /api/menu/:id
-// @access  Private
-const deleteMenuItem = async (req, res) => {
+// @route GET /api/menu/all  (admin)
+const getAllItems = async (req, res) => {
+  try {
+    const items = await MenuItem.find().sort({ category: 1, order: 1 });
+    return sendSuccess(res, 200, "All items fetched", items);
+  } catch (err) {
+    return sendError(res, 500, err.message);
+  }
+};
+
+// @route PUT /api/menu/:id
+const updateItem = async (req, res) => {
+  try {
+    const updates = { ...req.body };
+    if (req.file) {
+      // Delete old image
+      const old = await MenuItem.findById(req.params.id);
+      if (old?.publicId) await cloudinary.uploader.destroy(old.publicId);
+      updates.imageUrl = req.file.path;
+      updates.publicId = req.file.filename;
+    }
+    if (updates.dietary && typeof updates.dietary === "string") {
+      updates.dietary = JSON.parse(updates.dietary);
+    }
+    const item = await MenuItem.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!item) return sendError(res, 404, "Item not found");
+    return sendSuccess(res, 200, "Item updated", item);
+  } catch (err) {
+    return sendError(res, 500, err.message);
+  }
+};
+
+// @route DELETE /api/menu/:id
+const deleteItem = async (req, res) => {
   try {
     const item = await MenuItem.findById(req.params.id);
-    if (!item) return sendError(res, 404, "Menu item not found");
-
-    if (item.publicId) {
-      await cloudinary.uploader.destroy(item.publicId);
-    }
-
+    if (!item) return sendError(res, 404, "Item not found");
+    if (item.publicId) await cloudinary.uploader.destroy(item.publicId);
     await item.deleteOne();
-
-    return sendSuccess(res, 200, "Menu item deleted");
-  } catch (error) {
-    return sendError(res, 500, error.message);
+    return sendSuccess(res, 200, "Item deleted");
+  } catch (err) {
+    return sendError(res, 500, err.message);
   }
 };
 
-module.exports = {
-  getAllMenuItems,
-  createMenuItem,
-  updateMenuItem,
-  deleteMenuItem,
-};
+module.exports = { createItem, getItems, getAllItems, updateItem, deleteItem };
