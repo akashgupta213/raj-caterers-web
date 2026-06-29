@@ -11,6 +11,7 @@ const SECTIONS = [
   { value: "private_dining",label: "Private Dining" },
   { value: "social",        label: "Social" },
   { value: "about",         label: "About / Team" },
+  { value: "about_hero",    label: "About Hero Video" },
 ];
 
 export default function ManageGallery() {
@@ -103,18 +104,21 @@ export default function ManageGallery() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Image picker */}
             <div
-              onClick={() => fileRef.current?.click()}
-              className="aspect-video rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-secondary transition overflow-hidden"
-            >
-              {preview
-                ? <img src={preview} alt="" className="w-full h-full object-cover" />
-                : <div className="text-center text-on-surface-variant">
-                    <span className="material-symbols-outlined text-[40px]">add_photo_alternate</span>
-                    <p className="font-body text-body-sm mt-2">Click to select image</p>
-                  </div>
-              }
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-            </div>
+  onClick={() => fileRef.current?.click()}
+  className="aspect-video rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-secondary transition overflow-hidden"
+>
+  {preview ? (
+    file?.type?.startsWith("video/")
+      ? <video src={preview} className="w-full h-full object-cover" muted autoPlay loop playsInline />
+      : <img src={preview} alt="" className="w-full h-full object-cover" />
+  ) : (
+    <div className="text-center text-on-surface-variant">
+      <span className="material-symbols-outlined text-[40px]">add_photo_alternate</span>
+      <p className="font-body text-body-sm mt-2">Click to select image or video</p>
+    </div>
+  )}
+  <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFile} />
+</div>
 
             {/* Fields */}
             <div className="flex flex-col gap-4 md:col-span-2">
@@ -132,13 +136,27 @@ export default function ManageGallery() {
                   placeholder={`Auto (${filtered.length})`}
                   className="w-full bg-transparent border-b border-outline py-2 font-body text-body-sm focus:outline-none focus:border-secondary transition" />
               </div>
-              <button onClick={handleUpload} disabled={!file || uploading}
-                className="mt-auto bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider disabled:opacity-50 hover:opacity-90 transition flex items-center gap-2">
-                {uploading
-                  ? <><span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Uploading…</>
-                  : <><span className="material-symbols-outlined text-[16px]">cloud_upload</span> Upload Image</>
-                }
-              </button>
+              <button
+  onClick={handleUpload}
+  disabled={!file || uploading}
+  className="mt-auto bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider disabled:opacity-50 hover:opacity-90 transition flex items-center gap-2"
+>
+  {uploading ? (
+    <>
+      <span className="material-symbols-outlined text-[16px] animate-spin">
+        progress_activity
+      </span>
+      Uploading...
+    </>
+  ) : (
+    <>
+      <span className="material-symbols-outlined text-[16px]">
+        cloud_upload
+      </span>
+      Upload {file?.type?.startsWith("video/") ? "Video" : "Image"}
+    </>
+  )}
+</button>
             </div>
           </div>
         </div>
@@ -156,26 +174,33 @@ export default function ManageGallery() {
               </div>
             : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filtered.map((img) => (
-                  <div key={img._id} className={`relative group rounded-xl overflow-hidden border ${img.isActive ? "border-outline-variant" : "border-red-200 opacity-60"}`}>
-                    <img src={img.imageUrl} alt={img.caption} className="w-full aspect-video object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                      <button onClick={() => handleToggle(img)}
-                        className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/40 transition"
-                        title={img.isActive ? "Hide" : "Show"}>
-                        <span className="material-symbols-outlined text-[16px]">{img.isActive ? "visibility_off" : "visibility"}</span>
-                      </button>
-                      <button onClick={() => handleDelete(img._id, SECTIONS.find(s => s.value === img.section)?.label)}
-                        className="w-9 h-9 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 transition"
-                        title="Delete">
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
-                    </div>
-                    <div className="p-2 bg-surface">
-                      <p className="font-body text-[11px] text-on-surface-variant truncate">{img.caption || "No caption"}</p>
-                      <p className="font-body text-[10px] text-on-surface-variant/60">Order: {img.order}</p>
-                    </div>
-                  </div>
-                ))}
+  <div key={img._id} className={`relative group rounded-xl overflow-hidden border ${img.isActive ? "border-outline-variant" : "border-red-200 opacity-60"}`}>
+    
+    {img.mediaType === "video"
+      ? <video src={img.imageUrl} className="w-full aspect-video object-cover" muted loop playsInline />
+      : <img src={img.imageUrl} alt={img.caption} className="w-full aspect-video object-cover" />
+    }
+
+    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+      <button onClick={() => handleToggle(img)}
+        className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/40 transition"
+        title={img.isActive ? "Hide" : "Show"}>
+        <span className="material-symbols-outlined text-[16px]">{img.isActive ? "visibility_off" : "visibility"}</span>
+      </button>
+      <button onClick={() => handleDelete(img._id, SECTIONS.find(s => s.value === img.section)?.label)}
+        className="w-9 h-9 rounded-full bg-red-500/80 text-white flex items-center justify-center hover:bg-red-600 transition"
+        title="Delete">
+        <span className="material-symbols-outlined text-[16px]">delete</span>
+      </button>
+    </div>
+
+    <div className="p-2 bg-surface">
+      <p className="font-body text-[11px] text-on-surface-variant truncate">{img.caption || "No caption"}</p>
+      <p className="font-body text-[10px] text-on-surface-variant/60">Order: {img.order}</p>
+    </div>
+
+  </div>
+))}
               </div>
         }
       </main>

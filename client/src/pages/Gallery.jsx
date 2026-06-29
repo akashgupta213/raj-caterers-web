@@ -13,11 +13,11 @@ const SECTIONS = [
 ];
 
 export default function Gallery() {
-  const [searchParams]              = useSearchParams();
-  const [images,    setImages]      = useState([]);
-  const [filter,    setFilter]      = useState(searchParams.get("section") || "all");
-  const [lightbox,  setLightbox]    = useState(null);
-  const [loading,   setLoading]     = useState(true);
+  const [searchParams]           = useSearchParams();
+  const [images,   setImages]    = useState([]);
+  const [filter,   setFilter]    = useState(searchParams.get("section") || "all");
+  const [lightbox, setLightbox]  = useState(null);
+  const [loading,  setLoading]   = useState(true);
 
   useEffect(() => {
     api.get("/gallery")
@@ -29,14 +29,13 @@ export default function Gallery() {
       .finally(() => setLoading(false));
   }, []);
 
-  // sync filter if URL param changes
   useEffect(() => {
     const s = searchParams.get("section");
     if (s) setFilter(s);
   }, [searchParams]);
 
   const displayed = filter === "all"
-    ? images.filter(i => i.section !== "hero" && i.section !== "about")
+    ? images.filter(i => i.section !== "hero" && i.section !== "about" && i.section !== "about_hero")
     : images.filter(i => i.section === filter);
 
   return (
@@ -70,10 +69,21 @@ export default function Gallery() {
         ) : (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
             {displayed.map((img, idx) => (
-              <div key={img._id} onClick={() => setLightbox(idx)}
-                className="break-inside-avoid cursor-pointer rounded-xl overflow-hidden group relative">
-                <img src={img.imageUrl} alt={img.caption || ""}
-                  className="w-full object-cover group-hover:scale-105 transition duration-500" />
+              <div key={img._id}
+                onClick={() => img.mediaType !== "video" && setLightbox(idx)}
+                className={`break-inside-avoid rounded-xl overflow-hidden group relative ${img.mediaType !== "video" ? "cursor-pointer" : ""}`}>
+                {img.mediaType === "video"
+                  ? <video
+                      src={img.imageUrl}
+                      className="w-full object-cover"
+                      autoPlay muted loop playsInline
+                    />
+                  : <img
+                      src={img.imageUrl}
+                      alt={img.caption || ""}
+                      className="w-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                }
                 {img.caption && (
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 p-3 opacity-0 group-hover:opacity-100 transition">
                     <p className="font-body text-white text-body-sm">{img.caption}</p>
@@ -85,7 +95,7 @@ export default function Gallery() {
         )}
       </section>
 
-      {/* Lightbox */}
+      {/* Lightbox — images only */}
       {lightbox !== null && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
           onClick={() => setLightbox(null)}>

@@ -30,8 +30,22 @@ export default function Hero() {
             <div key={slide._id}
               className={`absolute inset-0 z-0 transition-opacity duration-1000 ${i === current ? "opacity-100" : "opacity-0"}`}
             >
-              <img src={slide.imageUrl} alt={slide.caption || ""}
-                className="w-full h-full object-cover" />
+              {slide.mediaType === "video"
+                ? <video
+                    src={slide.imageUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                  />
+                : <img
+                    src={slide.imageUrl}
+                    alt={slide.caption || ""}
+                    className="w-full h-full object-cover"
+                  />
+              }
             </div>
           ))
         : <div className="absolute inset-0 z-0 image-placeholder" />

@@ -12,8 +12,8 @@ const TEAM = [
 ];
 
 export default function About() {
-  const [aboutImages,  setAboutImages]  = useState([]);
-  const [heroImage,    setHeroImage]    = useState(null);
+  const [aboutImages, setAboutImages] = useState([]);
+  const [heroMedia,   setHeroMedia]   = useState(null); // { url, type }
 
   useEffect(() => {
     // fetch about/team images
@@ -24,20 +24,22 @@ export default function About() {
       })
       .catch(() => {});
 
-    // fetch one hero image for the story section
-    api.get("/gallery?section=wedding")
+    // fetch hero video/image for the story section
+    api.get("/gallery?section=about_hero")
       .then(res => {
         const result = res.data?.data ?? res.data ?? [];
-        if (result.length > 0) setHeroImage(result[0].imageUrl);
+        if (result.length > 0)
+          setHeroMedia({ url: result[0].imageUrl, type: result[0].mediaType });
       })
       .catch(() => {});
   }, []);
 
   // map team members to images by index (upload in same order as team array)
   const teamWithImages = TEAM.map((member, i) => ({
-    ...member,
-    imageUrl: aboutImages[i]?.imageUrl || null,
-  }));
+  ...member,
+  mediaUrl: aboutImages[i]?.imageUrl || null,
+  mediaType: aboutImages[i]?.mediaType || "image",
+}));
 
   return (
     <>
@@ -51,11 +53,23 @@ export default function About() {
           </p>
           <p className="font-body text-body-lg text-on-surface-variant">Our philosophy is simple: every plate tells a story.</p>
         </div>
+
         <div className="aspect-square rounded-xl overflow-hidden">
-          {heroImage
-            ? <img src={heroImage} alt="Raj Caterers" className="w-full h-full object-cover" />
-            : <div className="w-full h-full image-placeholder" />
-          }
+          {heroMedia?.type === "video" ? (
+            <video
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              src={heroMedia.url}
+            />
+          ) : heroMedia?.url ? (
+            <img src={heroMedia.url} alt="Raj Caterers" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full image-placeholder" />
+          )}
         </div>
       </section>
 
@@ -76,10 +90,16 @@ export default function About() {
       <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
         <SectionHeading eyebrow="Meet the Team" title="The Visionaries" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-gutter">
-          {teamWithImages.map(m => (
-            <TeamCard key={m.name} name={m.name} role={m.role} imageUrl={m.imageUrl} />
-          ))}
-        </div>
+  {teamWithImages.map((member, index) => (
+    <TeamCard
+      key={index}
+      name={member.name}
+      role={member.role}
+      mediaUrl={member.mediaUrl}
+      mediaType={member.mediaType}
+    />
+  ))}
+</div>
       </section>
     </>
   );

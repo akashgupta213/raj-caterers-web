@@ -8,51 +8,94 @@ export default function ServicesGrid() {
   const [thumbs, setThumbs] = useState({});
 
   useEffect(() => {
-    // fetch first image for each service section
     Promise.all(
-      SERVICES.map(s =>
-        api.get(`/gallery?section=${s.gallerySection}`)
-          .then(res => {
+      SERVICES.map((service) =>
+        api
+          .get(`/gallery?section=${service.gallerySection}`)
+          .then((res) => {
             const result = res.data?.data ?? res.data ?? [];
-            const first  = Array.isArray(result) && result.length > 0 ? result[0].imageUrl : null;
-            return { section: s.gallerySection, imageUrl: first };
+
+            const first =
+              Array.isArray(result) && result.length > 0
+                ? result[0]
+                : null;
+
+            return {
+              section: service.gallerySection,
+              mediaUrl: first?.imageUrl ?? null,
+              mediaType: first?.mediaType ?? "image",
+            };
           })
-          .catch(() => ({ section: s.gallerySection, imageUrl: null }))
+          .catch(() => ({
+            section: service.gallerySection,
+            mediaUrl: null,
+            mediaType: "image",
+          }))
       )
-    ).then(results => {
+    ).then((results) => {
       const map = {};
-      results.forEach(r => { map[r.section] = r.imageUrl; });
+
+      results.forEach((item) => {
+        map[item.section] = {
+          url: item.mediaUrl,
+          type: item.mediaType,
+        };
+      });
+
       setThumbs(map);
     });
   }, []);
 
   return (
     <section className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-      <SectionHeading eyebrow="Curated Experiences" title="Bespoke Catering Services" />
+      <SectionHeading
+        eyebrow="Curated Experiences"
+        title="Bespoke Catering Services"
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-        {SERVICES.map((s) => (
+        {SERVICES.map((service) => (
           <Link
-            key={s.id}
-            to={`/gallery?section=${s.gallerySection}`}
+            key={service.id}
+            to={`/gallery?section=${service.gallerySection}`}
             className="group overflow-hidden rounded-xl bg-surface-container-lowest premium-shadow transition duration-500 hover:-translate-y-2"
           >
             <div className="flex flex-col md:flex-row h-full">
               {/* Thumbnail */}
               <div className="w-full md:w-1/2 h-64 md:h-auto overflow-hidden">
-                {thumbs[s.gallerySection]
-                  ? <img
-                      src={thumbs[s.gallerySection]}
-                      alt={s.title}
+                {thumbs[service.gallerySection]?.url ? (
+                  thumbs[service.gallerySection]?.type === "video" ? (
+                    <video
+                      src={thumbs[service.gallerySection].url}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                  : <div className="w-full h-full image-placeholder" />
-                }
+                  ) : (
+                    <img
+                      src={thumbs[service.gallerySection].url}
+                      alt={service.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                  )
+                ) : (
+                  <div className="w-full h-full image-placeholder" />
+                )}
               </div>
+
               <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                <h3 className="font-body text-title-lg text-secondary mb-4">{s.title}</h3>
-                <p className="font-body text-body-sm text-on-surface-variant mb-6">{s.desc}</p>
+                <h3 className="font-body text-title-lg text-secondary mb-4">
+                  {service.title}
+                </h3>
+
+                <p className="font-body text-body-sm text-on-surface-variant mb-6">
+                  {service.desc}
+                </p>
+
                 <span className="font-body text-label-caps uppercase text-primary border-b border-secondary w-fit pb-1 group-hover:text-secondary transition">
-                  {s.cta}
+                  {service.cta}
                 </span>
               </div>
             </div>

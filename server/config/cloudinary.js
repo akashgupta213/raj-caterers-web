@@ -11,11 +11,19 @@ cloudinary.config({
 // Gallery upload storage
 const galleryStorage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => ({
-    folder:         `raj-caterers/gallery/${req.body.section || "general"}`,
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 1920, height: 1080, crop: "limit", quality: "auto" }],
-  }),
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith("video/");
+    return {
+      folder:           `raj-caterers/gallery/${req.body.section || "general"}`,
+      resource_type:    isVideo ? "video" : "image",          // ← ADD THIS
+      allowed_formats:  isVideo
+        ? ["mp4", "webm", "mov"]                              // ← video formats
+        : ["jpg", "jpeg", "png", "webp"],
+      transformation:   isVideo
+        ? []                                                   // ← no transform for video
+        : [{ width: 1920, height: 1080, crop: "limit", quality: "auto" }],
+    };
+  },
 });
 
 // Menu upload storage

@@ -5,9 +5,10 @@ const { sendSuccess, sendError } = require("../utils/apiResponse");
 // @route POST /api/gallery  (admin, with image upload)
 const uploadImage = async (req, res) => {
   try {
-    if (!req.file) return sendError(res, 400, "No image uploaded");
+    if (!req.file) return sendError(res, 400, "No file uploaded");
 
     const { section, caption, order } = req.body;
+    const mediaType = req.file.mimetype.startsWith("video/") ? "video" : "image"; // ← ADD
 
     const image = await Gallery.create({
       imageUrl:  req.file.path,
@@ -15,9 +16,10 @@ const uploadImage = async (req, res) => {
       section,
       caption,
       order:     order ? Number(order) : 0,
+      mediaType,                                              // ← ADD
     });
 
-    return sendSuccess(res, 201, "Image uploaded", image);
+    return sendSuccess(res, 201, "File uploaded", image);
   } catch (err) {
     return sendError(res, 500, err.message);
   }
@@ -63,11 +65,12 @@ const deleteImage = async (req, res) => {
     const image = await Gallery.findById(req.params.id);
     if (!image) return sendError(res, 404, "Image not found");
 
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(image.publicId);
+    await cloudinary.uploader.destroy(image.publicId, {
+      resource_type: image.mediaType === "video" ? "video" : "image", // ← ADD
+    });
     await image.deleteOne();
 
-    return sendSuccess(res, 200, "Image deleted");
+    return sendSuccess(res, 200, "File deleted");
   } catch (err) {
     return sendError(res, 500, err.message);
   }
