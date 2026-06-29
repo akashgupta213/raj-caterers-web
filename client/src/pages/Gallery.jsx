@@ -1,34 +1,43 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../utils/api";
 
 const SECTIONS = [
-  { value: "all",           label: "All" },
-  { value: "wedding",       label: "Weddings" },
-  { value: "engagement",    label: "Engagement" },
-  { value: "birthday",      label: "Birthday" },
-  { value: "corporate",     label: "Corporate" },
-  { value: "private_dining",label: "Private" },
-  { value: "social",        label: "Social" },
+  { value: "all",            label: "All" },
+  { value: "wedding",        label: "Weddings" },
+  { value: "engagement",     label: "Engagement" },
+  { value: "birthday",       label: "Birthday" },
+  { value: "corporate",      label: "Corporate" },
+  { value: "private_dining", label: "Private" },
+  { value: "social",         label: "Social" },
 ];
 
 export default function Gallery() {
-  const [images,    setImages]    = useState([]);
-  const [filter,    setFilter]    = useState("all");
-  const [lightbox,  setLightbox]  = useState(null);
-  const [loading,   setLoading]   = useState(true);
+  const [searchParams]              = useSearchParams();
+  const [images,    setImages]      = useState([]);
+  const [filter,    setFilter]      = useState(searchParams.get("section") || "all");
+  const [lightbox,  setLightbox]    = useState(null);
+  const [loading,   setLoading]     = useState(true);
 
   useEffect(() => {
     api.get("/gallery")
-      .then(res => setImages(res.data.data))
+      .then(res => {
+        const result = res.data?.data ?? res.data ?? [];
+        setImages(Array.isArray(result) ? result : []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
+  // sync filter if URL param changes
+  useEffect(() => {
+    const s = searchParams.get("section");
+    if (s) setFilter(s);
+  }, [searchParams]);
+
   const displayed = filter === "all"
     ? images.filter(i => i.section !== "hero" && i.section !== "about")
     : images.filter(i => i.section === filter);
-
-  const lightboxList = displayed;
 
   return (
     <>
@@ -52,25 +61,28 @@ export default function Gallery() {
           ))}
         </div>
 
-        {loading
-          ? <div className="text-center py-20 text-on-surface-variant">Loading…</div>
-          : displayed.length === 0
-            ? <div className="text-center py-20 text-on-surface-variant font-body">No images in this section yet.</div>
-            : <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-                {displayed.map((img, idx) => (
-                  <div key={img._id} onClick={() => setLightbox(idx)}
-                    className="break-inside-avoid cursor-pointer rounded-xl overflow-hidden group">
-                    <img src={img.imageUrl} alt={img.caption || ""}
-                      className="w-full object-cover group-hover:scale-105 transition duration-500" />
-                    {img.caption && (
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 p-3 opacity-0 group-hover:opacity-100 transition">
-                        <p className="font-body text-white text-body-sm">{img.caption}</p>
-                      </div>
-                    )}
+        {loading ? (
+          <div className="text-center py-20 text-on-surface-variant">Loading…</div>
+        ) : displayed.length === 0 ? (
+          <div className="text-center py-20 text-on-surface-variant font-body">
+            No images in this section yet.
+          </div>
+        ) : (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+            {displayed.map((img, idx) => (
+              <div key={img._id} onClick={() => setLightbox(idx)}
+                className="break-inside-avoid cursor-pointer rounded-xl overflow-hidden group relative">
+                <img src={img.imageUrl} alt={img.caption || ""}
+                  className="w-full object-cover group-hover:scale-105 transition duration-500" />
+                {img.caption && (
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 p-3 opacity-0 group-hover:opacity-100 transition">
+                    <p className="font-body text-white text-body-sm">{img.caption}</p>
                   </div>
-                ))}
+                )}
               </div>
-        }
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Lightbox */}
@@ -87,17 +99,19 @@ export default function Gallery() {
               <span className="material-symbols-outlined">chevron_left</span>
             </button>
           )}
-          <img src={lightboxList[lightbox]?.imageUrl} alt=""
+          <img src={displayed[lightbox]?.imageUrl} alt=""
             className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
             onClick={e => e.stopPropagation()} />
-          {lightbox < lightboxList.length - 1 && (
+          {lightbox < displayed.length - 1 && (
             <button className="absolute right-4 text-white w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
               onClick={e => { e.stopPropagation(); setLightbox(l => l + 1); }}>
               <span className="material-symbols-outlined">chevron_right</span>
             </button>
           )}
-          {lightboxList[lightbox]?.caption && (
-            <p className="absolute bottom-6 text-white/70 font-body text-body-sm">{lightboxList[lightbox].caption}</p>
+          {displayed[lightbox]?.caption && (
+            <p className="absolute bottom-6 text-white/70 font-body text-body-sm">
+              {displayed[lightbox].caption}
+            </p>
           )}
         </div>
       )}

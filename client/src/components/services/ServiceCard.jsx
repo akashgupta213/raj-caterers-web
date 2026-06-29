@@ -1,7 +1,21 @@
-export default function ServiceCard({ title, desc, features = [] }) {
+import { Link } from "react-router-dom";
+
+export default function ServiceCard({ title, desc, features = [], imageUrl, gallerySection }) {
   return (
-    <div className="bg-surface-container-lowest rounded-xl premium-shadow overflow-hidden hover:-translate-y-2 transition">
-      <div className="h-56 image-placeholder">text here</div>
+    <Link
+      to={`/gallery?section=${gallerySection}`}
+      className="bg-surface-container-lowest rounded-xl premium-shadow overflow-hidden hover:-translate-y-2 transition block group"
+    >
+      <div className="h-56 overflow-hidden">
+        {imageUrl
+          ? <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+            />
+          : <div className="w-full h-full image-placeholder" />
+        }
+      </div>
       <div className="p-8">
         <h3 className="font-display text-title-lg text-secondary mb-3">{title}</h3>
         <p className="font-body text-body-sm text-on-surface-variant mb-6">{desc}</p>
@@ -13,6 +27,6 @@ export default function ServiceCard({ title, desc, features = [] }) {
           ))}
         </ul>
       </div>
-    </div>
+    </Link>
   );
 }

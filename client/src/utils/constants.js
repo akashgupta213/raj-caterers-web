@@ -11,10 +11,10 @@ export const NAV_LINKS = [
 ];
 
 export const SERVICES = [
-  { id: "weddings", title: "Weddings", desc: "Enchanting culinary experiences tailored to your love story.", cta: "Explore Wedding Menus" },
-  { id: "corporate", title: "Corporate", desc: "Sophisticated menus designed for board meetings, galas, and networking events.", cta: "Business Packages" },
-  { id: "private", title: "Private Dining", desc: "Bring the fine-dining experience to your home with a personal chef.", cta: "Private Menus" },
-  { id: "social", title: "Social Soirees", desc: "Birthdays, anniversaries, and gatherings turned into culinary events.", cta: "View Gallery" },
+  { id: "weddings",  title: "Weddings",      desc: "Enchanting culinary experiences tailored to your love story.",                                    cta: "Explore Wedding Menus", gallerySection: "wedding"       },
+  { id: "corporate", title: "Corporate",     desc: "Sophisticated menus designed for board meetings, galas, and networking events.",                  cta: "Business Packages",     gallerySection: "corporate"     },
+  { id: "private",   title: "Private Dining",desc: "Bring the fine-dining experience to your home with a personal chef.",                            cta: "Private Menus",         gallerySection: "private_dining"},
+  { id: "social",    title: "Social Soirees",desc: "Birthdays, anniversaries, and gatherings turned into culinary events.",                          cta: "View Gallery",          gallerySection: "social"        },
 ];
 
 export const MENU_CATEGORIES = ["Appetizers", "Main Course", "Desserts", "Beverages", "Live Counters"];
