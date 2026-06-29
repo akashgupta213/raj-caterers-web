@@ -18,13 +18,17 @@ const getApprovedReviews = async (req, res) => {
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
         : 0;
 
-    return sendSuccess(res, 200, "Reviews fetched", { reviews, avgRating, total: reviews.length });
+    return sendSuccess(res, 200, "Reviews fetched", {
+      reviews,
+      avgRating,
+      total: reviews.length,
+    });
   } catch (error) {
     return sendError(res, 500, error.message);
   }
 };
 
-// @desc    Get all reviews (admin - includes unapproved)
+// @desc    Get all reviews (admin — includes unapproved)
 // @route   GET /api/reviews/admin
 // @access  Private
 const getAllReviewsAdmin = async (req, res) => {
@@ -42,26 +46,44 @@ const getAllReviewsAdmin = async (req, res) => {
 
     return sendSuccess(res, 200, "Reviews fetched", {
       reviews,
-      pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / limit) },
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     return sendError(res, 500, error.message);
   }
 };
 
-// @desc    Create review (admin adds on behalf of client)
+// @desc    Create review (submitted by guest publicly)
 // @route   POST /api/reviews
-// @access  Private
+// @access  Public
 const createReview = async (req, res) => {
   try {
-    const review = await Review.create(req.body);
-    return sendSuccess(res, 201, "Review created", review);
+    // Strip any fields guests shouldn't set
+    const { clientName, clientRole, review, rating, eventType, eventDate } = req.body;
+
+    const doc = await Review.create({
+      clientName,
+      clientRole,
+      review,
+      rating,
+      eventType,
+      eventDate,
+      isApproved: false, // always starts pending
+      isVerified: false,
+    });
+
+    return sendSuccess(res, 201, "Review submitted — pending approval", doc);
   } catch (error) {
     return sendError(res, 500, error.message);
   }
 };
 
-// @desc    Update review (approve / feature)
+// @desc    Update review (approve / feature / verify)
 // @route   PUT /api/reviews/:id
 // @access  Private
 const updateReview = async (req, res) => {
@@ -91,10 +113,35 @@ const deleteReview = async (req, res) => {
   }
 };
 
+// @desc    Mark review as helpful (public — once per IP)
+// @route   PUT /api/reviews/:id/helpful
+// @access  Public
+const markHelpful = async (req, res) => {
+  try {
+    const ip = req.ip || req.connection.remoteAddress || "unknown";
+    const review = await Review.findById(req.params.id);
+
+    if (!review)               return sendError(res, 404, "Review not found");
+    if (!review.isApproved)    return sendError(res, 403, "Review not available");
+    if (review.helpfulVoters.includes(ip)) {
+      return sendError(res, 409, "Already voted");
+    }
+
+    review.helpfulCount += 1;
+    review.helpfulVoters.push(ip);
+    await review.save();
+
+    return sendSuccess(res, 200, "Marked as helpful", { helpfulCount: review.helpfulCount });
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
 module.exports = {
   getApprovedReviews,
   getAllReviewsAdmin,
   createReview,
   updateReview,
   deleteReview,
+  markHelpful,
 };
