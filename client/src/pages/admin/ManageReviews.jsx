@@ -30,10 +30,9 @@ export default function ManageReviews() {
   const pendingCount = reviews.filter(r => !r.isApproved).length;
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
-
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

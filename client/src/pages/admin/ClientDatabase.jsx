@@ -23,10 +23,10 @@ export default function ClientDatabase() {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
-        <header className="flex justify-between items-center mb-8">
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
+       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
           <h1 className="font-display text-headline-md text-primary">Client Database</h1>
           <input
             value={search}

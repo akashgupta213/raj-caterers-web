@@ -73,9 +73,9 @@ export default function ManageGallery() {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
         <h1 className="font-display text-headline-md text-primary mb-2">Manage Gallery</h1>
         <p className="font-body text-body-sm text-on-surface-variant mb-8">
           Upload images per section — they appear live on the website instantly.

@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const LINKS = [
@@ -13,24 +14,77 @@ const LINKS = [
 export default function Sidebar() {
   const { logout } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+
+  // Close drawer whenever route changes
+  useEffect(() => setOpen(false), [location.pathname]);
+
+  // Lock body scroll while drawer is open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
   return (
-    <aside className="w-64 min-h-screen bg-inverse-surface text-inverse-on-surface flex flex-col">
-      <div className="p-6 border-b border-white/10">
-        <h2 className="font-display text-headline-md-mobile text-gold">Raj Caterers</h2>
-        <p className="font-body text-label-caps uppercase opacity-70 mt-1">Admin Panel</p>
+    <>
+      {/* Mobile top bar — only visible below md */}
+      <div className="md:hidden flex items-center justify-between bg-inverse-surface text-inverse-on-surface px-4 py-3 sticky top-0 z-40">
+        <h2 className="font-display text-title-lg text-gold">Raj Caterers</h2>
+        <button
+          onClick={() => setOpen(true)}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+          aria-label="Open menu"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {LINKS.map(l => (
-          <NavLink key={l.to} to={l.to} end
-            className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm transition ${isActive ? "bg-secondary text-on-primary" : "hover:bg-white/5"}`}>
-            <span className="material-symbols-outlined">{l.icon}</span>{l.label}
-          </NavLink>
-        ))}
-      </nav>
-      <button onClick={() => { logout(); nav("/admin/login"); }}
-        className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5">
-        <span className="material-symbols-outlined">logout</span>Logout
-      </button>
-    </aside>
+
+      {/* Backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Sidebar / Drawer */}
+      <aside
+        className={`
+          fixed md:static top-0 left-0 h-full md:min-h-screen w-64
+          bg-inverse-surface text-inverse-on-surface flex flex-col
+          z-50 transition-transform duration-300 ease-out
+          ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+        `}
+      >
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div>
+            <h2 className="font-display text-headline-md-mobile text-gold">Raj Caterers</h2>
+            <p className="font-body text-label-caps uppercase opacity-70 mt-1">Admin Panel</p>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+            aria-label="Close menu"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {LINKS.map(l => (
+            <NavLink key={l.to} to={l.to} end
+              className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm transition ${isActive ? "bg-secondary text-on-primary" : "hover:bg-white/5"}`}>
+              <span className="material-symbols-outlined">{l.icon}</span>{l.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <button onClick={() => { logout(); nav("/admin/login"); }}
+          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5">
+          <span className="material-symbols-outlined">logout</span>Logout
+        </button>
+      </aside>
+    </>
   );
 }

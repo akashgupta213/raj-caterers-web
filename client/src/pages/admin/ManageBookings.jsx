@@ -588,12 +588,12 @@ export default function ManageBookings() {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
 
         {/* Header */}
-        <header className="flex justify-between items-center mb-8">
+       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
           <div>
             <h1 className="font-display text-headline-md text-primary">Manage Bookings</h1>
             <p className="font-body text-body-sm text-on-surface-variant mt-1">

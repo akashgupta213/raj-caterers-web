@@ -99,9 +99,9 @@ export default function ManageMenu() {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="font-display text-headline-md text-primary">Manage Menu</h1>

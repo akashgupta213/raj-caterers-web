@@ -398,9 +398,9 @@ export default function Dashboard() {
   const recentBookings = filtered.slice(0, 5);
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 bg-surface p-8 min-h-screen">
+    <div className="flex flex-col md:flex-row">
+  <Sidebar />
+  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
 
         {/* Header */}
         <header className="flex justify-between items-center mb-6">
