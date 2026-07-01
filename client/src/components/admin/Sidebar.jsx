@@ -25,7 +25,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile top bar */}
+      {/* Mobile top bar — hidden on desktop */}
       <div className="md:hidden flex items-center justify-between bg-inverse-surface text-inverse-on-surface px-4 py-3 sticky top-0 z-40">
         <h2 className="font-display text-title-lg text-gold">Raj Caterers</h2>
         <button
@@ -37,7 +37,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Backdrop */}
+      {/* Backdrop — mobile only */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -45,20 +45,28 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar / Drawer */}
+      {/* Desktop sidebar — hidden on mobile, shown via drawer on mobile */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-full md:min-h-screen w-64
-          bg-inverse-surface text-inverse-on-surface flex flex-col
-          z-50 transition-transform duration-300 ease-out
-          ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+          fixed md:sticky md:top-0
+          top-0 left-0
+          h-screen md:h-screen
+          w-64 shrink-0
+          bg-inverse-surface text-inverse-on-surface
+          flex flex-col
+          z-50
+          transition-transform duration-300 ease-out
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
         `}
       >
+        {/* Sidebar header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div>
             <h2 className="font-display text-headline-md-mobile text-gold">Raj Caterers</h2>
             <p className="font-body text-label-caps uppercase opacity-70 mt-1">Admin Panel</p>
           </div>
+          {/* Close button — mobile only */}
           <button
             onClick={close}
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition"
@@ -68,6 +76,7 @@ export default function Sidebar() {
           </button>
         </div>
 
+        {/* Nav links */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {LINKS.map(l => (
             <NavLink
@@ -87,9 +96,10 @@ export default function Sidebar() {
           ))}
         </nav>
 
+        {/* Logout */}
         <button
           onClick={() => { logout(); nav("/admin/login"); }}
-          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5"
+          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5 transition"
         >
           <span className="material-symbols-outlined">logout</span>
           Logout
