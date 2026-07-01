@@ -1,14 +1,15 @@
 const Review = require("../models/Review.model");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
-// @desc    Get all approved reviews (public)
+// @desc    Get all reviews (public) — shown immediately on submit,
+//          isApproved/isVerified are admin badges, not a visibility gate
 // @route   GET /api/reviews
 // @access  Public
 const getApprovedReviews = async (req, res) => {
   try {
     const { featured } = req.query;
 
-    const query = { isApproved: true };
+    const query = {}; // no isApproved filter — all submitted reviews are public
     if (featured === "true") query.isFeatured = true;
 
     const reviews = await Review.find(query).sort({ sortOrder: 1, createdAt: -1 });
@@ -28,15 +29,17 @@ const getApprovedReviews = async (req, res) => {
   }
 };
 
-// @desc    Get all reviews (admin — includes unapproved)
+// @desc    Get all reviews (admin — same data, supports filtering/pagination
+//          by isApproved/isVerified for moderation tooling)
 // @route   GET /api/reviews/admin
 // @access  Private
 const getAllReviewsAdmin = async (req, res) => {
   try {
-    const { isApproved, page = 1, limit = 10 } = req.query;
+    const { isApproved, isVerified, page = 1, limit = 10 } = req.query;
 
     const query = {};
     if (isApproved !== undefined) query.isApproved = isApproved === "true";
+    if (isVerified !== undefined) query.isVerified = isVerified === "true";
 
     const total   = await Review.countDocuments(query);
     const reviews = await Review.find(query)
@@ -58,7 +61,7 @@ const getAllReviewsAdmin = async (req, res) => {
   }
 };
 
-// @desc    Create review (submitted by guest publicly)
+// @desc    Create review (submitted by guest publicly) — live immediately
 // @route   POST /api/reviews
 // @access  Public
 const createReview = async (req, res) => {
@@ -73,11 +76,11 @@ const createReview = async (req, res) => {
       rating,
       eventType,
       eventDate,
-      isApproved: false, // always starts pending
-      isVerified: false,
+      isApproved: false, // admin badge only — does not hide the review
+      isVerified: false, // admin badge only — does not hide the review
     });
 
-    return sendSuccess(res, 201, "Review submitted — pending approval", doc);
+    return sendSuccess(res, 201, "Review submitted", doc);
   } catch (error) {
     return sendError(res, 500, error.message);
   }
@@ -121,8 +124,7 @@ const markHelpful = async (req, res) => {
     const ip = req.ip || req.connection.remoteAddress || "unknown";
     const review = await Review.findById(req.params.id);
 
-    if (!review)               return sendError(res, 404, "Review not found");
-    if (!review.isApproved)    return sendError(res, 403, "Review not available");
+    if (!review) return sendError(res, 404, "Review not found");
     if (review.helpfulVoters.includes(ip)) {
       return sendError(res, 409, "Already voted");
     }

@@ -69,18 +69,18 @@ function FilterBar({ activeType, setActiveType, activeRating, setActiveRating, s
       </div>
 
       {/* Divider */}
-      <div className="w-px bg-outline-variant hidden sm:block" />
+      <div className="w-px bg-outline-variant self-stretch hidden sm:block" />
 
       {/* Rating filter */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {["All", "5", "4+"].map(r => (
           <button
             key={r}
             onClick={() => setActiveRating(r)}
-            className={`px-4 py-1.5 rounded-full font-body text-[11px] uppercase tracking-widest border transition-all
+            className={`px-4 py-1.5 rounded-full font-body text-[11px] uppercase tracking-widest border transition-all whitespace-nowrap
               ${activeRating === r
-                ? "bg-secondary text-on-secondary border-secondary"
-                : "border-outline-variant text-on-surface-variant hover:border-secondary hover:text-secondary"
+                ? "bg-primary text-on-primary border-primary"
+                : "border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary"
               }`}
           >
             {r === "All" ? "All Ratings" : r === "5" ? "★ 5 only" : "★ 4+"}
@@ -178,7 +178,23 @@ export default function Reviews() {
     setSubmitting(true);
     try {
       const { _hp, ...payload } = form; // strip honeypot before sending
-      await api.post("/reviews", payload);
+      const res = await api.post("/reviews", payload);
+      const newReview = res.data?.data ?? res.data;
+
+      // Show it on the site immediately instead of waiting for a refetch/approval.
+      // Falls back to the submitted form data if the API doesn't echo back the created record.
+      const reviewToShow = newReview && newReview._id
+        ? newReview
+        : { ...payload, _id: `temp-${Date.now()}`, createdAt: new Date().toISOString(), helpfulCount: 0, isVerified: false };
+
+      setReviews(prev => [reviewToShow, ...prev]);
+      setTotal(t => t + 1);
+      setAvgRating(prevAvg => {
+        const prevTotal = total;
+        const newTotal = prevTotal + 1;
+        return Math.round((((prevAvg * prevTotal) + reviewToShow.rating) / newTotal) * 10) / 10;
+      });
+
       setSubmitted(true);
       setForm(EMPTY_FORM);
     } catch {
@@ -304,7 +320,7 @@ export default function Reviews() {
                 <p className="text-5xl mb-4">🙏</p>
                 <h3 className="font-display text-headline-sm text-primary mb-2">Thank you!</h3>
                 <p className="font-body text-body-lg text-on-surface-variant">
-                  Your review has been submitted and will appear once our team approves it — usually within 24 hours.
+                  Thanks for your feedback — your review is now live on the site.
                 </p>
                 <button
                   onClick={closeModal}
@@ -401,10 +417,6 @@ export default function Reviews() {
                   >
                     {submitting ? "Submitting…" : "Submit Review"}
                   </button>
-
-                  <p className="font-body text-[11px] text-on-surface-variant text-center">
-                    Reviews are moderated and appear within 24 hours of approval.
-                  </p>
                 </div>
               </>
             )}
