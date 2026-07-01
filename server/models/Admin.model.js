@@ -16,7 +16,7 @@ const adminSchema = new mongoose.Schema(
 // Hash password before save
 adminSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(12);
+  const salt = await bcrypt.genSalt(10); // 10 rounds: bcrypt's own default, faster than 12 with negligible security tradeoff
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });

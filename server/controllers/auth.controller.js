@@ -23,9 +23,8 @@ const login = async (req, res) => {
       return sendError(res, 403, "Your account has been deactivated");
     }
 
-    // Update last login
-    admin.lastLogin = new Date();
-    await admin.save({ validateBeforeSave: false });
+    // Update last login (fire-and-forget — don't block the response on this)
+    Admin.updateOne({ _id: admin._id }, { lastLogin: new Date() }).catch(() => {});
 
     const token = generateToken(admin._id);
 
