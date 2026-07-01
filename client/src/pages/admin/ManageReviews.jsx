@@ -31,10 +31,11 @@ export default function ManageReviews() {
 
   return (
     <div className="flex flex-col md:flex-row">
-  <Sidebar />
-  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+      <Sidebar />
+      <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
+
+        {/* Header — stacks on mobile, side-by-side on desktop */}
+        <div className="flex flex-col gap-4 mb-8">
           <div>
             <h1 className="font-display text-headline-md text-primary">Manage Reviews</h1>
             {pendingCount > 0 && (
@@ -44,8 +45,8 @@ export default function ManageReviews() {
             )}
           </div>
 
-          {/* Filter tabs */}
-          <div className="flex gap-2">
+          {/* Filter tabs — full width row, wraps cleanly */}
+          <div className="flex flex-wrap gap-2">
             {[
               { key: "all",      label: "All" },
               { key: "pending",  label: `Pending${pendingCount ? ` (${pendingCount})` : ""}` },
@@ -66,8 +67,9 @@ export default function ManageReviews() {
           </div>
         </div>
 
+        {/* Cards grid — 1 col on mobile, 2 on desktop */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-gutter">
             {[1,2,3,4].map(i => (
               <div key={i} className="bg-surface-container-lowest rounded-xl p-6 premium-shadow animate-pulse h-52" />
             ))}
@@ -75,19 +77,19 @@ export default function ManageReviews() {
         ) : displayed.length === 0 ? (
           <p className="font-body text-body-sm text-on-surface-variant">No reviews in this category.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-gutter">
             {displayed.map(r => (
-              <div key={r._id} className="bg-surface-container-lowest rounded-xl p-6 premium-shadow flex flex-col gap-4">
+              <div key={r._id} className="bg-surface-container-lowest rounded-xl p-4 md:p-6 premium-shadow flex flex-col gap-4">
 
                 {/* Top row */}
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-display text-title-lg text-primary">{r.clientName}</h3>
+                <div className="flex justify-between items-start gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-display text-title-lg text-primary truncate">{r.clientName}</h3>
                     <p className="font-body text-body-sm text-on-surface-variant">
                       {[r.eventType, r.clientRole].filter(Boolean).join(" · ")}
                     </p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase ${
+                  <span className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-bold uppercase ${
                     r.isApproved
                       ? "bg-tertiary-container text-on-tertiary-container"
                       : "bg-secondary-fixed text-on-secondary-container"
@@ -101,18 +103,15 @@ export default function ManageReviews() {
                 <p className="font-body text-body-lg italic text-on-surface">"{r.review}"</p>
 
                 {/* Meta */}
-                <div className="flex gap-4 text-[11px] font-body uppercase tracking-widest text-on-surface-variant">
-                  {r.helpfulCount > 0 && (
-                    <span>👍 {r.helpfulCount} helpful</span>
-                  )}
+                <div className="flex flex-wrap gap-3 text-[11px] font-body uppercase tracking-widest text-on-surface-variant">
+                  {r.helpfulCount > 0 && <span>👍 {r.helpfulCount} helpful</span>}
                   {r.eventDate && (
                     <span>📅 {new Date(r.eventDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</span>
                   )}
                 </div>
 
-                {/* Action row */}
+                {/* Action buttons — wrap on mobile */}
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-outline-variant">
-                  {/* Approve / Reject */}
                   {!r.isApproved ? (
                     <button onClick={() => handleApprove(r._id)}
                       className="px-4 py-2 rounded-full bg-secondary text-on-secondary font-body text-label-caps uppercase text-[11px]">
@@ -125,7 +124,6 @@ export default function ManageReviews() {
                     </button>
                   )}
 
-                  {/* Verified toggle */}
                   <button
                     onClick={() => handleVerify(r._id, r.isVerified)}
                     className={`px-4 py-2 rounded-full border font-body text-label-caps uppercase text-[11px] transition-all
@@ -137,7 +135,6 @@ export default function ManageReviews() {
                     {r.isVerified ? "✓ Verified" : "Mark Verified"}
                   </button>
 
-                  {/* Featured toggle */}
                   <button
                     onClick={() => handleFeature(r._id, r.isFeatured)}
                     className={`px-4 py-2 rounded-full border font-body text-label-caps uppercase text-[11px] transition-all
@@ -149,7 +146,6 @@ export default function ManageReviews() {
                     {r.isFeatured ? "★ Featured" : "Feature"}
                   </button>
 
-                  {/* Delete */}
                   <button onClick={() => handleDelete(r._id)}
                     className="ml-auto px-4 py-2 rounded-full border border-outline-variant text-on-surface-variant font-body text-label-caps uppercase text-[11px] hover:border-error hover:text-error transition-colors">
                     Delete

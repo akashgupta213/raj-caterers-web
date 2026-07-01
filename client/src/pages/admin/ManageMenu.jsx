@@ -8,15 +8,15 @@ const DIETARY_OPTIONS = ["Vegetarian", "Vegan", "Halal", "Gluten Free"];
 const EMPTY_FORM = { name: "", description: "", price: "", category: "Appetizers", dietary: [], order: "" };
 
 export default function ManageMenu() {
-  const [items,     setItems]     = useState([]);
-  const [category,  setCategory]  = useState("Appetizers");
-  const [loading,   setLoading]   = useState(false);
-  const [saving,    setSaving]    = useState(false);
-  const [editId,    setEditId]    = useState(null);
-  const [form,      setForm]      = useState(EMPTY_FORM);
-  const [preview,   setPreview]   = useState(null);
-  const [file,      setFile]      = useState(null);
-  const [showForm,  setShowForm]  = useState(false);
+  const [items,    setItems]    = useState([]);
+  const [category, setCategory] = useState("Appetizers");
+  const [loading,  setLoading]  = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [editId,   setEditId]   = useState(null);
+  const [form,     setForm]     = useState(EMPTY_FORM);
+  const [preview,  setPreview]  = useState(null);
+  const [file,     setFile]     = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const fileRef = useRef();
 
   const load = async () => {
@@ -74,7 +74,6 @@ export default function ManageMenu() {
         else fd.append(k, v);
       });
       if (file) fd.append("image", file);
-
       if (editId) {
         await api.put(`/menu/${editId}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
       } else {
@@ -100,17 +99,21 @@ export default function ManageMenu() {
 
   return (
     <div className="flex flex-col md:flex-row">
-  <Sidebar />
-  <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
-        <div className="flex justify-between items-center mb-8">
+      <Sidebar />
+      <main className="flex-1 bg-surface p-4 md:p-8 min-h-screen overflow-x-hidden">
+
+        {/* Header — fixed: stacks on mobile */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
           <div>
             <h1 className="font-display text-headline-md text-primary">Manage Menu</h1>
             <p className="font-body text-body-sm text-on-surface-variant mt-1">
               Items appear on the public menu page with images.
             </p>
           </div>
-          <button onClick={openNew}
-            className="bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider hover:opacity-90 transition">
+          <button
+            onClick={openNew}
+            className="self-start sm:self-auto bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider hover:opacity-90 transition"
+          >
             + Add Dish
           </button>
         </div>
@@ -155,7 +158,9 @@ export default function ManageMenu() {
                         <h3 className="font-display text-title-sm text-primary">{item.name}</h3>
                         <span className="font-body text-body-sm text-secondary font-semibold">₹{item.price}</span>
                       </div>
-                      {item.description && <p className="font-body text-body-sm text-on-surface-variant mb-2">{item.description}</p>}
+                      {item.description && (
+                        <p className="font-body text-body-sm text-on-surface-variant mb-2">{item.description}</p>
+                      )}
                       <div className="flex flex-wrap gap-1 mb-3">
                         {(item.dietary || []).map((d) => (
                           <span key={d} className="text-[10px] font-bold uppercase bg-surface-container px-2 py-0.5 rounded-full text-on-surface-variant">{d}</span>

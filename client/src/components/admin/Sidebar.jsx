@@ -1,34 +1,31 @@
 import { useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const LINKS = [
-  { to: "/admin", icon: "dashboard", label: "Dashboard" },
-  { to: "/admin/bookings", icon: "event", label: "Bookings" },
-  { to: "/admin/clients", icon: "groups", label: "Clients" },
-  { to: "/admin/menu", icon: "restaurant_menu", label: "Menu" },
-  { to: "/admin/gallery", icon: "photo_library", label: "Gallery" },
-  { to: "/admin/reviews", icon: "reviews", label: "Reviews" },
+  { to: "/admin",          icon: "dashboard",      label: "Dashboard" },
+  { to: "/admin/bookings", icon: "event",           label: "Bookings" },
+  { to: "/admin/clients",  icon: "groups",          label: "Clients" },
+  { to: "/admin/menu",     icon: "restaurant_menu", label: "Menu" },
+  { to: "/admin/gallery",  icon: "photo_library",   label: "Gallery" },
+  { to: "/admin/reviews",  icon: "reviews",         label: "Reviews" },
 ];
 
 export default function Sidebar() {
   const { logout } = useAuth();
   const nav = useNavigate();
-  const location = useLocation();
   const [open, setOpen] = useState(false);
 
-  // Close drawer whenever route changes
-  useEffect(() => setOpen(false), [location.pathname]);
-
-  // Lock body scroll while drawer is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  const close = () => setOpen(false);
+
   return (
     <>
-      {/* Mobile top bar — only visible below md */}
+      {/* Mobile top bar */}
       <div className="md:hidden flex items-center justify-between bg-inverse-surface text-inverse-on-surface px-4 py-3 sticky top-0 z-40">
         <h2 className="font-display text-title-lg text-gold">Raj Caterers</h2>
         <button
@@ -44,7 +41,7 @@ export default function Sidebar() {
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setOpen(false)}
+          onClick={close}
         />
       )}
 
@@ -63,7 +60,7 @@ export default function Sidebar() {
             <p className="font-body text-label-caps uppercase opacity-70 mt-1">Admin Panel</p>
           </div>
           <button
-            onClick={() => setOpen(false)}
+            onClick={close}
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition"
             aria-label="Close menu"
           >
@@ -73,16 +70,29 @@ export default function Sidebar() {
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {LINKS.map(l => (
-            <NavLink key={l.to} to={l.to} end
-              className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm transition ${isActive ? "bg-secondary text-on-primary" : "hover:bg-white/5"}`}>
-              <span className="material-symbols-outlined">{l.icon}</span>{l.label}
+            <NavLink
+              key={l.to}
+              to={l.to}
+              end
+              onClick={close}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm transition ${
+                  isActive ? "bg-secondary text-on-primary" : "hover:bg-white/5"
+                }`
+              }
+            >
+              <span className="material-symbols-outlined">{l.icon}</span>
+              {l.label}
             </NavLink>
           ))}
         </nav>
 
-        <button onClick={() => { logout(); nav("/admin/login"); }}
-          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5">
-          <span className="material-symbols-outlined">logout</span>Logout
+        <button
+          onClick={() => { logout(); nav("/admin/login"); }}
+          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          Logout
         </button>
       </aside>
     </>
