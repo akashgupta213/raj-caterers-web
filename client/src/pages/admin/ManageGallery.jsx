@@ -20,8 +20,10 @@ export default function ManageGallery() {
   const [loading,   setLoading]   = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form,      setForm]      = useState({ caption: "", order: "" });
-  const [preview,   setPreview]   = useState(null);
-  const [file,      setFile]      = useState(null);
+
+  // files is now an array of { file, preview } objects instead of a single file
+  const [files, setFiles] = useState([]);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
   const fileRef = useRef();
 
   const load = async () => {
@@ -35,30 +37,72 @@ export default function ManageGallery() {
 
   useEffect(() => { load(); }, []);
 
+  // clean up object URLs when files change/unmount to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      files.forEach((f) => URL.revokeObjectURL(f.preview));
+    };
+  }, [files]);
+
   const filtered = images.filter((i) => i.section === section);
 
   const handleFile = (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
+    const picked = Array.from(e.target.files || []);
+    if (!picked.length) return;
+    const withPreviews = picked.map((f) => ({
+      file: f,
+      preview: URL.createObjectURL(f),
+    }));
+    setFiles((prev) => [...prev, ...withPreviews]);
+    // reset the input so selecting the same file(s) again still fires onChange
+    e.target.value = "";
+  };
+
+  const removeFile = (index) => {
+    setFiles((prev) => {
+      const next = [...prev];
+      URL.revokeObjectURL(next[index].preview);
+      next.splice(index, 1);
+      return next;
+    });
+  };
+
+  const clearAllFiles = () => {
+    files.forEach((f) => URL.revokeObjectURL(f.preview));
+    setFiles([]);
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!files.length) return;
     setUploading(true);
+    setProgress({ done: 0, total: files.length });
+
+    const baseOrder = form.order !== "" ? parseInt(form.order, 10) : filtered.length;
+
     try {
-      const fd = new FormData();
-      fd.append("image",   file);
-      fd.append("section", section);
-      fd.append("caption", form.caption);
-      fd.append("order",   form.order || filtered.length);
-      await api.post("/gallery", fd, { headers: { "Content-Type": "multipart/form-data" } });
-      setFile(null); setPreview(null); setForm({ caption: "", order: "" });
-      fileRef.current.value = "";
+      for (let i = 0; i < files.length; i++) {
+        const { file } = files[i];
+        const fd = new FormData();
+        fd.append("image", file);
+        fd.append("section", section);
+        fd.append("caption", form.caption);
+        // if multiple files share one order value, increment per file so they don't collide
+        fd.append("order", baseOrder + i);
+
+        await api.post("/gallery", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        setProgress((p) => ({ ...p, done: p.done + 1 }));
+      }
+
+      clearAllFiles();
+      setForm({ caption: "", order: "" });
+      if (fileRef.current) fileRef.current.value = "";
       load();
-    } catch (e) { console.error(e); }
-    finally { setUploading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setUploading(false);
+      setProgress({ done: 0, total: 0 });
+    }
   };
 
   const handleDelete = async (id, label) => {
@@ -103,22 +147,60 @@ export default function ManageGallery() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Image picker */}
-            <div
-  onClick={() => fileRef.current?.click()}
-  className="aspect-video rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-secondary transition overflow-hidden"
->
-  {preview ? (
-    file?.type?.startsWith("video/")
-      ? <video src={preview} className="w-full h-full object-cover" muted autoPlay loop playsInline />
-      : <img src={preview} alt="" className="w-full h-full object-cover" />
-  ) : (
-    <div className="text-center text-on-surface-variant">
-      <span className="material-symbols-outlined text-[40px]">add_photo_alternate</span>
-      <p className="font-body text-body-sm mt-2">Click to select image or video</p>
-    </div>
-  )}
-  <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFile} />
-</div>
+            <div className="md:col-span-1">
+              <div
+                onClick={() => fileRef.current?.click()}
+                className="aspect-video rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-secondary transition overflow-hidden"
+              >
+                <div className="text-center text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[40px]">add_photo_alternate</span>
+                  <p className="font-body text-body-sm mt-2">Click to select image(s) or video(s)</p>
+                  <p className="font-body text-[10px] mt-1 text-on-surface-variant/60">You can select multiple files</p>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFile}
+                />
+              </div>
+
+              {/* Selected files preview strip */}
+              {files.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-body text-[11px] uppercase tracking-widest text-on-surface-variant">
+                      {files.length} file{files.length !== 1 ? "s" : ""} selected
+                    </p>
+                    <button
+                      onClick={clearAllFiles}
+                      className="font-body text-[11px] text-red-500 hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {files.map((f, idx) => (
+                      <div key={idx} className="relative group/thumb rounded-lg overflow-hidden border border-outline-variant aspect-square">
+                        {f.file.type.startsWith("video/")
+                          ? <video src={f.preview} className="w-full h-full object-cover" muted playsInline />
+                          : <img src={f.preview} alt="" className="w-full h-full object-cover" />
+                        }
+                        <button
+                          onClick={() => removeFile(idx)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition"
+                          title="Remove"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">close</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Fields */}
             <div className="flex flex-col gap-4 md:col-span-2">
@@ -127,6 +209,11 @@ export default function ManageGallery() {
                 <input value={form.caption} onChange={(e) => setForm(f => ({ ...f, caption: e.target.value }))}
                   placeholder="e.g. Royal Wedding at The Grand"
                   className="w-full bg-transparent border-b border-outline py-2 font-body text-body-sm focus:outline-none focus:border-secondary transition" />
+                {files.length > 1 && (
+                  <p className="font-body text-[10px] mt-1 text-on-surface-variant/60">
+                    This caption will be applied to all {files.length} files.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="font-body text-[11px] uppercase tracking-widest text-on-surface-variant block mb-1">
@@ -135,28 +222,33 @@ export default function ManageGallery() {
                 <input type="number" min="0" value={form.order} onChange={(e) => setForm(f => ({ ...f, order: e.target.value }))}
                   placeholder={`Auto (${filtered.length})`}
                   className="w-full bg-transparent border-b border-outline py-2 font-body text-body-sm focus:outline-none focus:border-secondary transition" />
+                {files.length > 1 && (
+                  <p className="font-body text-[10px] mt-1 text-on-surface-variant/60">
+                    Files will be ordered sequentially starting from this value.
+                  </p>
+                )}
               </div>
               <button
-  onClick={handleUpload}
-  disabled={!file || uploading}
-  className="mt-auto bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider disabled:opacity-50 hover:opacity-90 transition flex items-center gap-2"
->
-  {uploading ? (
-    <>
-      <span className="material-symbols-outlined text-[16px] animate-spin">
-        progress_activity
-      </span>
-      Uploading...
-    </>
-  ) : (
-    <>
-      <span className="material-symbols-outlined text-[16px]">
-        cloud_upload
-      </span>
-      Upload {file?.type?.startsWith("video/") ? "Video" : "Image"}
-    </>
-  )}
-</button>
+                onClick={handleUpload}
+                disabled={!files.length || uploading}
+                className="mt-auto bg-secondary text-on-primary px-6 py-3 rounded-full font-body text-[11px] uppercase tracking-wider disabled:opacity-50 hover:opacity-90 transition flex items-center gap-2"
+              >
+                {uploading ? (
+                  <>
+                    <span className="material-symbols-outlined text-[16px] animate-spin">
+                      progress_activity
+                    </span>
+                    Uploading {progress.done}/{progress.total}...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[16px]">
+                      cloud_upload
+                    </span>
+                    Upload {files.length > 1 ? `${files.length} Files` : files.length === 1 ? (files[0].file.type.startsWith("video/") ? "Video" : "Image") : "Files"}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
