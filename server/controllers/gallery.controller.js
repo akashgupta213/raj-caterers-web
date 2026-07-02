@@ -2,24 +2,29 @@ const Gallery  = require("../models/Gallery.model");
 const { cloudinary } = require("../config/cloudinary");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
-// @route POST /api/gallery  (admin, with image upload)
-const uploadImage = async (req, res) => {
+// @route POST /api/gallery  (admin, with multiple image/video upload)
+const uploadImages = async (req, res) => {
   try {
-    if (!req.file) return sendError(res, 400, "No file uploaded");
+    if (!req.files || req.files.length === 0) return sendError(res, 400, "No files uploaded");
 
     const { section, caption, order } = req.body;
-    const mediaType = req.file.mimetype.startsWith("video/") ? "video" : "image"; // ← ADD
+    const baseOrder = order ? Number(order) : 0;
 
-    const image = await Gallery.create({
-      imageUrl:  req.file.path,
-      publicId:  req.file.filename,
-      section,
-      caption,
-      order:     order ? Number(order) : 0,
-      mediaType,                                              // ← ADD
-    });
+    const images = await Promise.all(
+      req.files.map((file, i) => {
+        const mediaType = file.mimetype.startsWith("video/") ? "video" : "image";
+        return Gallery.create({
+          imageUrl:  file.path,
+          publicId:  file.filename,
+          section,
+          caption,
+          order:     baseOrder + i,
+          mediaType,
+        });
+      })
+    );
 
-    return sendSuccess(res, 201, "File uploaded", image);
+    return sendSuccess(res, 201, "Files uploaded", images);
   } catch (err) {
     return sendError(res, 500, err.message);
   }
@@ -66,7 +71,7 @@ const deleteImage = async (req, res) => {
     if (!image) return sendError(res, 404, "Image not found");
 
     await cloudinary.uploader.destroy(image.publicId, {
-      resource_type: image.mediaType === "video" ? "video" : "image", // ← ADD
+      resource_type: image.mediaType === "video" ? "video" : "image",
     });
     await image.deleteOne();
 
@@ -76,4 +81,4 @@ const deleteImage = async (req, res) => {
   }
 };
 
-module.exports = { uploadImage, getImages, getAllImages, updateImage, deleteImage };
+module.exports = { uploadImages, getImages, getAllImages, updateImage, deleteImage };

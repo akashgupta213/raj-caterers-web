@@ -15,12 +15,12 @@ const galleryStorage = new CloudinaryStorage({
     const isVideo = file.mimetype.startsWith("video/");
     return {
       folder:           `raj-caterers/gallery/${req.body.section || "general"}`,
-      resource_type:    isVideo ? "video" : "image",          // ← ADD THIS
+      resource_type:    isVideo ? "video" : "image",
       allowed_formats:  isVideo
-        ? ["mp4", "webm", "mov"]                              // ← video formats
+        ? ["mp4", "webm", "mov"]
         : ["jpg", "jpeg", "png", "webp"],
       transformation:   isVideo
-        ? []                                                   // ← no transform for video
+        ? []
         : [{ width: 1920, height: 1080, crop: "limit", quality: "auto" }],
     };
   },
@@ -36,7 +36,18 @@ const menuStorage = new CloudinaryStorage({
   },
 });
 
-const uploadGallery = multer({ storage: galleryStorage });
-const uploadMenu    = multer({ storage: menuStorage });
+// Banquet Hall upload storage — used with .array() so multiple files upload in one request
+const banquetHallStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:          "raj-caterers/banquet-halls",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation:  [{ width: 1920, height: 1080, crop: "limit", quality: "auto" }],
+  },
+});
 
-module.exports = { cloudinary, uploadGallery, uploadMenu };
+const uploadGallery     = multer({ storage: galleryStorage });
+const uploadMenu        = multer({ storage: menuStorage });
+const uploadBanquetHall = multer({ storage: banquetHallStorage });
+
+module.exports = { cloudinary, uploadGallery, uploadMenu, uploadBanquetHall };

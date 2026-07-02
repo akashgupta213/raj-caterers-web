@@ -7,25 +7,25 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 w-full z-50 glass-nav shadow-[0_4px_30px_rgba(139,76,77,0.05)]">
-      <div className="max-w-container-max mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-20 gap-6">
           {/* Logo */}
           <Link
             to="/"
-            className="font-display text-xl md:text-2xl text-primary whitespace-nowrap"
+            className="font-display text-lg xl:text-2xl text-primary whitespace-nowrap shrink-0"
           >
             Raj Caterers
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+          <div className="hidden xl:flex items-center gap-4 2xl:gap-6 flex-1 justify-end">
             {NAV_LINKS.map((l) => (
               <NavLink
                 key={l.path}
                 to={l.path}
                 end
                 className={({ isActive }) =>
-                  `font-body text-sm xl:text-base pb-1 transition-all duration-300 ${
+                  `whitespace-nowrap font-body text-[13px] 2xl:text-sm pb-1 transition-all duration-300 ${
                     isActive
                       ? "text-secondary border-b-2 border-secondary"
                       : "text-on-surface-variant hover:text-primary"
@@ -38,15 +38,15 @@ export default function Navbar() {
           </div>
 
           {/* Right side: CTA + Hamburger */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link
               to="/enquire"
-              className="hidden md:inline-flex items-center bg-secondary text-on-primary px-6 py-2.5 rounded-full font-body text-xs uppercase tracking-wider hover:opacity-90 transition transform hover:scale-105"
+              className="hidden md:inline-flex items-center whitespace-nowrap bg-secondary text-on-primary px-5 xl:px-6 py-2.5 rounded-full font-body text-[11px] uppercase tracking-wider hover:opacity-90 transition transform hover:scale-105"
             >
               Book Now
             </Link>
             <button
-              className="lg:hidden p-2 -mr-2 text-primary"
+              className="xl:hidden p-2 -mr-2 text-primary"
               onClick={() => setOpen(!open)}
               aria-label="Menu"
             >
@@ -60,7 +60,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {open && (
-        <div className="lg:hidden bg-surface-container-lowest border-t border-outline-variant px-4 sm:px-6 py-4 space-y-1">
+        <div className="xl:hidden bg-surface-container-lowest border-t border-outline-variant px-4 sm:px-6 py-4 space-y-1">
           {NAV_LINKS.map((l) => (
             <NavLink
               key={l.path}

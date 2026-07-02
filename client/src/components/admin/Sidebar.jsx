@@ -8,6 +8,7 @@ const LINKS = [
   { to: "/admin/clients",  icon: "groups",          label: "Clients" },
   { to: "/admin/menu",     icon: "restaurant_menu", label: "Menu" },
   { to: "/admin/gallery",  icon: "photo_library",   label: "Gallery" },
+  { to: "/admin/banquet-halls",icon: "meeting_room",    label: "Banquet Halls" },
   { to: "/admin/reviews",  icon: "reviews",         label: "Reviews" },
 ];
 

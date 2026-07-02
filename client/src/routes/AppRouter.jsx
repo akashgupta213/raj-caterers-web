@@ -3,6 +3,8 @@ import Home from "../pages/Home";
 import Services from "../pages/Services";
 import Menu from "../pages/Menu";
 import Gallery from "../pages/Gallery";
+import BanquetHalls from "../pages/BanquetHalls";
+import BanquetHallDetail from "../pages/BanquetHallDetail";
 import Packages from "../pages/Packages";
 import EnquireNow from "../pages/EnquireNow";
 import Reviews from "../pages/Reviews";
@@ -15,6 +17,7 @@ import Dashboard from "../pages/admin/Dashboard";
 import ManageBookings from "../pages/admin/ManageBookings";
 import ClientDatabase from "../pages/admin/ClientDatabase";
 import ManageGallery from "../pages/admin/ManageGallery";
+import ManageBanquetHalls from "../pages/admin/ManageBanquetHalls";
 import ManageMenu from "../pages/admin/ManageMenu";
 import ManageReviews from "../pages/admin/ManageReviews";
 import ProtectedRoute from "./ProtectedRoute";
@@ -34,6 +37,8 @@ export default function AppRouter() {
           <Route path="/services" element={<Services />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/banquet-halls" element={<BanquetHalls />} />
+          <Route path="/banquet-halls/:id" element={<BanquetHallDetail />} />
           <Route path="/packages" element={<Packages />} />
           <Route path="/enquire" element={<EnquireNow />} />
           <Route path="/reviews" element={<Reviews />} />
@@ -45,6 +50,7 @@ export default function AppRouter() {
           <Route path="/admin/bookings" element={<ProtectedRoute><ManageBookings /></ProtectedRoute>} />
           <Route path="/admin/clients" element={<ProtectedRoute><ClientDatabase /></ProtectedRoute>} />
           <Route path="/admin/gallery" element={<ProtectedRoute><ManageGallery /></ProtectedRoute>} />
+          <Route path="/admin/banquet-halls" element={<ProtectedRoute><ManageBanquetHalls /></ProtectedRoute>} />
           <Route path="/admin/menu" element={<ProtectedRoute><ManageMenu /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute><ManageReviews /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

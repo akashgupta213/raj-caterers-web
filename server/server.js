@@ -40,14 +40,15 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // ─── Routes ────────────────────────────────────────────────
-app.use("/api/auth",      require("./routes/auth.routes"));
-app.use("/api/bookings",  require("./routes/booking.routes"));
-app.use("/api/enquiries", require("./routes/enquiry.routes"));
-app.use("/api/clients",   require("./routes/client.routes"));
-app.use("/api/gallery",   require("./routes/gallery.routes"));
-app.use("/api/menu",      require("./routes/menu.routes"));
-app.use("/api/reviews",   require("./routes/review.routes"));
-app.use("/api/contact",   require("./routes/contact.routes"));
+app.use("/api/auth",         require("./routes/auth.routes"));
+app.use("/api/bookings",     require("./routes/booking.routes"));
+app.use("/api/enquiries",    require("./routes/enquiry.routes"));
+app.use("/api/clients",      require("./routes/client.routes"));
+app.use("/api/gallery",      require("./routes/gallery.routes"));
+app.use("/api/banquet-halls",require("./routes/banquetHall.routes"));
+app.use("/api/menu",         require("./routes/menu.routes"));
+app.use("/api/reviews",      require("./routes/review.routes"));
+app.use("/api/contact",      require("./routes/contact.routes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
