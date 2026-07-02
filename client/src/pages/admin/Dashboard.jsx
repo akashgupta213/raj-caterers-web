@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import Sidebar from "../../components/admin/Sidebar";
 import BookingTable from "../../components/admin/BookingTable";
 import EnquiryTable from "../../components/admin/EnquiryTable";
 import {
   fetchBookingStats, fetchBookings,
   fetchEnquiries, fetchClientStats, fetchEnquiryStats,
+  fetchHallEnquiries, fetchHallEnquiryStats,
 } from "../../utils/api";
+
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 const MONTHS_FULL = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -24,6 +27,12 @@ const STATUS_PILL = {
   "In Progress": "bg-blue-100 text-blue-700 border border-blue-300",
   "Completed":   "bg-slate-200 text-slate-700 border border-slate-400",
   "Cancelled":   "bg-red-100 text-red-600 border border-red-300",
+};
+
+const HALL_ENQUIRY_STATUS_PILL = {
+  "New":       "bg-secondary-fixed text-secondary border border-secondary/30",
+  "Contacted": "bg-blue-50 text-blue-700 border border-blue-200",
+  "Closed":    "bg-slate-100 text-slate-600 border border-slate-300",
 };
 
 /* ─── Trend badge ─────────────────────────────────────────────────────── */
@@ -99,7 +108,6 @@ function RevenueBarChart({ data, filterMonth }) {
         Revenue (₹) · Completed bookings only
       </p>
 
-      {/* Tooltip */}
       <div className={`mb-3 h-8 flex items-center transition-opacity duration-200 ${tooltip ? "opacity-100" : "opacity-0"}`}>
         {tooltip && (
           <div className="bg-primary text-on-primary text-[11px] font-body px-3 py-1.5 rounded-lg">
@@ -112,14 +120,12 @@ function RevenueBarChart({ data, filterMonth }) {
       </div>
 
       <div className="flex gap-2">
-        {/* Y-axis */}
         <div className="flex flex-col justify-between items-end pr-2 h-36 md:h-48 text-[10px] font-body text-on-surface-variant select-none">
           <span>{fmt(maxVal)}</span>
           <span>{fmt(Math.round(maxVal * 0.5))}</span>
           <span>₹0</span>
         </div>
 
-        {/* Bars */}
         <div className="flex-1 flex items-end gap-1 md:gap-1.5 h-36 md:h-48 relative">
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
             {[0, 1, 2].map((i) => (
@@ -150,7 +156,6 @@ function RevenueBarChart({ data, filterMonth }) {
         </div>
       </div>
 
-      {/* X-axis */}
       <div className="flex gap-1 mt-2 pl-[calc(2rem+8px)]">
         {["J","F","M","A","M","J","J","A","S","O","N","D"].map((m, i) => (
           <div key={i} className="flex-1 text-center">
@@ -284,6 +289,46 @@ function RecentBookingsTable({ rows }) {
   );
 }
 
+/* ─── Banquet Hall Enquiries Table (new, separate from EnquiryTable) ──── */
+function HallEnquiryTable({ rows }) {
+  if (!rows.length) {
+    return <p className="font-body text-body-sm text-on-surface-variant">No banquet hall enquiries yet.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl premium-shadow">
+      <table className="w-full text-left min-w-[600px]">
+        <thead>
+          <tr className="border-b border-outline-variant bg-surface-container-lowest">
+            {["Name","Hall","Phone","Email","Preferred Date","Pax","Status"].map((h) => (
+              <th key={h} className="px-3 md:px-4 py-3 font-body text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((h) => (
+            <tr key={h._id} className="border-b border-outline-variant/40 hover:bg-surface-container-lowest/60 transition">
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface whitespace-nowrap">{h.name}</td>
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-secondary font-medium whitespace-nowrap">{h.hallName}</td>
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">{h.phone}</td>
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">{h.email}</td>
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">
+                {h.date ? new Date(h.date).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}
+              </td>
+              <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">{h.pax || "—"}</td>
+              <td className="px-3 md:px-4 py-3">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${HALL_ENQUIRY_STATUS_PILL[h.status] || "bg-surface-container text-on-surface"}`}>
+                  {h.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    DASHBOARD
 ══════════════════════════════════════════════════════════════════════════ */
@@ -292,6 +337,8 @@ export default function Dashboard() {
   const [enquiries,    setEnquiries]    = useState([]);
   const [clients,      setClients]      = useState(null);
   const [enquiryStats, setEnquiryStats] = useState(null);
+  const [hallEnquiries,      setHallEnquiries]      = useState([]);
+  const [hallEnquiryStats,   setHallEnquiryStats]   = useState(null);
 
   const [filterMonth, setFilterMonth] = useState(0);
   const [filterYear,  setFilterYear]  = useState(THIS_YEAR);
@@ -308,6 +355,10 @@ export default function Dashboard() {
       .catch(console.error);
     fetchClientStats().then(setClients).catch(console.error);
     fetchEnquiryStats().then(setEnquiryStats).catch(console.error);
+    fetchHallEnquiries()
+      .then((h) => setHallEnquiries(h.slice(0, 5)))
+      .catch(console.error);
+    fetchHallEnquiryStats().then(setHallEnquiryStats).catch(console.error);
   }, []);
 
   const filtered = allBookings.filter((b) => {
@@ -467,19 +518,54 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Bookings */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-4">
-          <h2 className="font-display text-title-lg text-primary">Recent Bookings</h2>
-          <span className="font-body text-body-sm text-on-surface-variant">{filtered.length} total in period</span>
-        </div>
+      
+{/* Recent Bookings */}
+<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-4">
+  <h2 className="font-display text-title-lg text-primary">Recent Bookings</h2>
+  <span className="font-body text-[11px] uppercase tracking-wider text-secondary bg-secondary-fixed px-3 py-1 rounded-full">
+    {filtered.length} total in period
+  </span>
+</div>
         <div className="mb-8">
           <RecentBookingsTable rows={recentBookings} />
         </div>
 
         {/* Latest Enquiries */}
-        <h2 className="font-display text-title-lg text-primary mb-4">Latest Enquiries</h2>
-        {enquiries.length > 0
-          ? <EnquiryTable rows={enquiries} />
-          : <p className="font-body text-body-sm text-on-surface-variant">No enquiries yet.</p>}
+<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-4">
+  <h2 className="font-display text-title-lg text-primary">Latest Enquiries</h2>
+  <div className="flex items-center gap-3">
+    {enquiryStats?.newCount > 0 && (
+      <span className="font-body text-[11px] font-bold uppercase tracking-wider text-secondary bg-secondary/10 border border-secondary/30 px-3 py-1 rounded-full">
+        {enquiryStats.newCount} new
+      </span>
+    )}
+    <Link to="/admin/enquiries" className="font-body text-[11px] uppercase tracking-wider text-secondary hover:underline whitespace-nowrap">
+      View all →
+    </Link>
+  </div>
+</div>
+<div className="mb-8">
+  {enquiries.length > 0
+    ? <EnquiryTable rows={enquiries} />
+    : <p className="font-body text-body-sm text-on-surface-variant">No enquiries yet.</p>}
+</div>
+
+
+       {/* Banquet Hall Enquiries — separate section, separate collection */}
+<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-4">
+  <h2 className="font-display text-title-lg text-primary">Banquet Hall Enquiries</h2>
+  <div className="flex items-center gap-3">
+    {hallEnquiryStats?.newCount > 0 && (
+      <span className="font-body text-[11px] font-bold uppercase tracking-wider text-secondary bg-secondary/10 border border-secondary/30 px-3 py-1 rounded-full">
+        {hallEnquiryStats.newCount} new
+      </span>
+    )}
+    <Link to="/admin/hall-enquiries" className="font-body text-[11px] uppercase tracking-wider text-secondary hover:underline whitespace-nowrap">
+      View all →
+    </Link>
+  </div>
+</div>
+        <HallEnquiryTable rows={hallEnquiries} />
 
       </main>
     </div>

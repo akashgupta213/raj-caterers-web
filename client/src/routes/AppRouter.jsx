@@ -24,6 +24,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
 import { useLocation } from "react-router-dom";
+import ManageHallEnquiries from "../pages/admin/ManageHallEnquiries";
+import ManageEnquiries from "../pages/admin/ManageEnquiries";
 
 export default function AppRouter() {
   const { pathname } = useLocation();
@@ -53,6 +55,8 @@ export default function AppRouter() {
           <Route path="/admin/banquet-halls" element={<ProtectedRoute><ManageBanquetHalls /></ProtectedRoute>} />
           <Route path="/admin/menu" element={<ProtectedRoute><ManageMenu /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute><ManageReviews /></ProtectedRoute>} />
+          <Route path="/admin/enquiries" element={<ProtectedRoute><ManageEnquiries /></ProtectedRoute>} />
+          <Route path="/admin/hall-enquiries" element={<ProtectedRoute><ManageHallEnquiries /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

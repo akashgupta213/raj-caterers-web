@@ -75,10 +75,32 @@ export const fetchClientStats = () =>
 export const fetchEnquiries = () =>
   api.get("/enquiries").then((r) => r.data.data.enquiries);
 
+export const fetchAllEnquiries = () =>
+  api.get("/enquiries", { params: { limit: 500 } }).then((r) => r.data.data.enquiries);
+
 export const updateEnquiry = (id, body) =>
   api.put(`/enquiries/${id}`, body).then((r) => r.data.data);
 
+export const deleteEnquiry = (id) =>
+  api.delete(`/enquiries/${id}`).then((r) => r.data);
+
 export const fetchEnquiryStats = () =>
   api.get("/enquiries/stats").then((r) => r.data.data);
+
+// ── Banquet Hall Enquiries ─────────────────────
+export const createHallEnquiry = (body) =>
+  api.post("/hall-enquiries", body).then((r) => r.data.data);
+
+export const fetchHallEnquiries = () =>
+  api.get("/hall-enquiries").then((r) => r.data.data);
+
+export const updateHallEnquiry = (id, body) =>
+  api.put(`/hall-enquiries/${id}`, body).then((r) => r.data.data);
+
+export const deleteHallEnquiry = (id) =>
+  api.delete(`/hall-enquiries/${id}`).then((r) => r.data);
+
+export const fetchHallEnquiryStats = () =>
+  api.get("/hall-enquiries/stats").then((r) => r.data.data);
 
 export default api;

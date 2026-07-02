@@ -49,6 +49,7 @@ app.use("/api/banquet-halls",require("./routes/banquetHall.routes"));
 app.use("/api/menu",         require("./routes/menu.routes"));
 app.use("/api/reviews",      require("./routes/review.routes"));
 app.use("/api/contact",      require("./routes/contact.routes"));
+app.use("/api/hall-enquiries", require("./routes/hallEnquiry.routes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
