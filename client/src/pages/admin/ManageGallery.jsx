@@ -4,6 +4,7 @@ import api from "../../utils/api";
 
 const SECTIONS = [
   { value: "hero",          label: "Hero Slider" },
+  { value: "banquet_hero",  label: "Banquet Halls Hero" },
   { value: "wedding",       label: "Wedding" },
   { value: "engagement",    label: "Engagement" },
   { value: "birthday",      label: "Birthday" },
@@ -45,6 +46,8 @@ export default function ManageGallery() {
   }, [files]);
 
   const filtered = images.filter((i) => i.section === section);
+
+  const isBanquetHero = section === "banquet_hero";
 
   const handleFile = (e) => {
     const picked = Array.from(e.target.files || []);
@@ -144,6 +147,20 @@ export default function ManageGallery() {
           <h2 className="font-display text-title-lg text-primary mb-4">
             Upload to: <span className="text-secondary">{SECTIONS.find(s => s.value === section)?.label}</span>
           </h2>
+
+          {isBanquetHero && (
+            <div className="mb-6 rounded-xl border border-secondary/30 bg-secondary/5 p-4">
+              <p className="font-body text-[11px] uppercase tracking-widest text-secondary mb-1">
+                How this section is used
+              </p>
+              <p className="font-body text-body-sm text-on-surface-variant leading-relaxed">
+                These photos power the Banquet Halls page hero: the <strong>lowest-order image</strong> fills
+                the large arch frame, the next one fills the small floating circle, and any additional
+                photos are cycled through automatically. Use the Order field to control which appears first.
+                Videos uploaded here are skipped by that hero (photos only).
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Image picker */}
@@ -265,13 +282,19 @@ export default function ManageGallery() {
                 No images in this section yet. Upload one above.
               </div>
             : <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filtered.map((img) => (
+                {filtered.map((img, idx) => (
   <div key={img._id} className={`relative group rounded-xl overflow-hidden border ${img.isActive ? "border-outline-variant" : "border-red-200 opacity-60"}`}>
-    
+
     {img.mediaType === "video"
       ? <video src={img.imageUrl} className="w-full aspect-video object-cover" muted loop playsInline />
       : <img src={img.imageUrl} alt={img.caption} className="w-full aspect-video object-cover" />
     }
+
+    {isBanquetHero && img.mediaType !== "video" && (
+      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white px-2 py-0.5 rounded-full font-body text-[9px] uppercase tracking-wider">
+        {idx === 0 ? "Arch photo" : idx === 1 ? "Floating circle" : "In rotation"}
+      </div>
+    )}
 
     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
       <button onClick={() => handleToggle(img)}

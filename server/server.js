@@ -5,13 +5,10 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/error.middleware");
-
 // Load env vars
 dotenv.config();
-
 // Connect to MongoDB
 connectDB();
-
 const app = express();
 
 // Security headers — allow Cloudinary
@@ -65,12 +62,9 @@ app.get("/api/health", (req, res) => {
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });
-
 // Global error handler
 app.use(errorHandler);
-
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
 });

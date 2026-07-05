@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
+import { FloralFlower, FloralSprig, FloralStyles } from "../common/FloralDecor";
 
 export default function Hero() {
   const [slides,  setSlides]  = useState([]);
@@ -43,7 +44,7 @@ export default function Hero() {
                 : <img
                     src={slide.imageUrl}
                     alt={slide.caption || ""}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hero-kenburns"
                   />
               }
             </div>
@@ -54,10 +55,22 @@ export default function Hero() {
       {/* Overlay */}
       <div className="absolute inset-0 hero-overlay z-0" />
 
+      {/* Decorative florals — hidden on small screens so they don't crowd the text */}
+      <div className="hidden md:block absolute left-6 lg:left-10 top-1/2 -translate-y-1/2 z-[1] text-white/40">
+        <FloralSprig size={44} delay={0} />
+        <div className="mt-4 ml-8"><FloralSprig size={34} delay={1.2} flip /></div>
+      </div>
+      <div className="hidden md:block absolute right-6 lg:right-10 top-1/3 z-[1] text-white/40">
+        <FloralFlower size={38} delay={0.4} />
+        <div className="mt-6 mr-2"><FloralSprig size={30} delay={1.6} /></div>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 text-center max-w-4xl px-margin-mobile">
-        <span className="font-body text-label-caps text-white tracking-[0.3em] block mb-6 animate-fade-in">
+        <span className="font-body text-label-caps text-white tracking-[0.3em] mb-6 animate-fade-in inline-flex items-center gap-3">
+          <FloralFlower size={16} className="text-gold" />
           PREMIUM HOSPITALITY
+          <FloralFlower size={16} delay={0.5} className="text-gold" />
         </span>
         <h1 className="font-display text-display-lg-mobile md:text-display-lg text-white mb-8 leading-tight animate-fade-in">
           Excellence in Every Bite
@@ -84,6 +97,18 @@ export default function Hero() {
           ))}
         </div>
       )}
+
+      <FloralStyles />
+      <style>{`
+        @keyframes heroKenburns {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        .hero-kenburns { animation: heroKenburns 14s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-kenburns { animation: none; }
+        }
+      `}</style>
     </section>
   );
 }

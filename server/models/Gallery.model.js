@@ -7,12 +7,23 @@ const gallerySchema = new mongoose.Schema(
     section: {
       type: String,
       required: true,
-      enum: ["hero", "wedding", "engagement", "birthday", "corporate", "private_dining", "social", "about", "about_hero"], // ← added about_hero
+      enum: [
+        "hero",
+        "banquet_hero", // ← added: Banquet Halls page hero (arch + floating photo)
+        "wedding",
+        "engagement",
+        "birthday",
+        "corporate",
+        "private_dining",
+        "social",
+        "about",
+        "about_hero",
+      ],
     },
     caption:    { type: String, trim: true },
     order:      { type: Number, default: 0 },
     isActive:   { type: Boolean, default: true },
-    mediaType:  { type: String, enum: ["image", "video"], default: "image" }, // ← ADD
+    mediaType:  { type: String, enum: ["image", "video"], default: "image" },
   },
   { timestamps: true }
 );
