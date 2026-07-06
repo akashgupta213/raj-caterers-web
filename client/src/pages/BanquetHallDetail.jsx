@@ -29,6 +29,11 @@ export default function BanquetHallDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // ---- swipe (touch) tracking for mobile ----
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const SWIPE_THRESHOLD = 40; // px finger must travel before it counts as a swipe
+
   useEffect(() => {
     (async () => {
       try {
@@ -92,6 +97,26 @@ export default function BanquetHallDetail() {
     changeImage(index, index > activeImg ? 1 : -1);
   };
 
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartXRef.current;
+    const dy = touch.clientY - touchStartYRef.current;
+
+    // ignore if it barely moved, or if it was more of a vertical scroll than a horizontal swipe
+    if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0) {
+      goNext(); // swiped right-to-left -> next image
+    } else {
+      goPrev(); // swiped left-to-right -> previous image
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -143,7 +168,11 @@ export default function BanquetHallDetail() {
           Back to venues
         </Link>
 
-        <div className="relative rounded-2xl overflow-hidden mb-4 aspect-video bg-surface-container-high group">
+        <div
+          className="relative rounded-2xl overflow-hidden mb-4 aspect-video bg-surface-container-high group touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {hall.images?.length > 0 ? (
             <>
               {/* outgoing image slides out in the direction of travel */}
