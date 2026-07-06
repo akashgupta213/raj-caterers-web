@@ -329,6 +329,22 @@ function HallEnquiryTable({ rows }) {
   );
 }
 
+/* ─── Enquiry Table Wrapper — forces horizontal scroll on mobile
+       regardless of how EnquiryTable itself is structured ─────────────── */
+function EnquiryTableScroll({ rows }) {
+  const scrollRef = useRef(null);
+
+  return (
+    <div
+      ref={scrollRef}
+      className="overflow-x-scroll rounded-xl premium-shadow [&_table]:min-w-[600px] [&_table]:w-full [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap"
+      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+    >
+      <EnquiryTable rows={rows} />
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    DASHBOARD
 ══════════════════════════════════════════════════════════════════════════ */
@@ -546,7 +562,7 @@ export default function Dashboard() {
 </div>
 <div className="mb-8">
   {enquiries.length > 0
-    ? <EnquiryTable rows={enquiries} />
+    ? <EnquiryTableScroll rows={enquiries} />
     : <p className="font-body text-body-sm text-on-surface-variant">No enquiries yet.</p>}
 </div>
 
