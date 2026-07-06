@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import SectionHeading from "../components/common/SectionHeading";
 import ServiceCard from "../components/services/ServiceCard";
 import api from "../utils/api";
@@ -58,6 +59,7 @@ const SERVICES = [
 function AnimatedServiceCard({ service, mediaUrl, mediaType, index }) {
   const [ref, visible] = useScrollReveal();
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const navigate = useNavigate();
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -68,18 +70,28 @@ function AnimatedServiceCard({ service, mediaUrl, mediaType, index }) {
 
   const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
 
+  const handleClick = () => {
+    navigate(`/gallery?section=${service.gallerySection}`);
+  };
+
   return (
     <div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") handleClick();
+      }}
       style={{
         transitionDelay: visible ? `${index * 130}ms` : "0ms",
         transform: visible
           ? `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`
           : undefined,
       }}
-      className={`transition-all duration-700 ease-out will-change-transform ${
+      className={`cursor-pointer transition-all duration-700 ease-out will-change-transform ${
         visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-16 scale-95"
       }`}
     >
