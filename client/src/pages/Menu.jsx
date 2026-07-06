@@ -69,15 +69,26 @@ function TypewriterHeading({ text, start }) {
 
 function CategoryTabs({ category, setCategory, headerVisible }) {
   const containerRef = useRef(null);
-  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0 });
 
   useEffect(() => {
-    const el = containerRef.current?.querySelector(`[data-cat="${category}"]`);
-    if (el && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const rect = el.getBoundingClientRect();
-      setPill({ left: rect.left - containerRect.left, width: rect.width });
-    }
+    const measure = () => {
+      const el = containerRef.current?.querySelector(`[data-cat="${category}"]`);
+      if (el && containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        setPill({
+          left: rect.left - containerRect.left,
+          top: rect.top - containerRect.top,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    };
+    measure();
+    // tabs can wrap onto a different number of rows as the viewport changes width
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, [category, headerVisible]);
 
   return (
@@ -88,8 +99,8 @@ function CategoryTabs({ category, setCategory, headerVisible }) {
       }`}
     >
       <span
-        className="absolute top-0 h-full bg-secondary rounded-full transition-all duration-400 ease-out"
-        style={{ left: pill.left, width: pill.width, zIndex: 0 }}
+        className="absolute bg-secondary rounded-full transition-all duration-400 ease-out"
+        style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height, zIndex: 0 }}
       />
       {CATEGORIES.map((c, i) => (
         <button
