@@ -205,18 +205,18 @@ export default function BanquetHalls() {
     })();
   }, []);
 
-  // Pull hero photos uploaded via the admin Gallery manager (section: "hero")
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.get("/gallery/all");
-        const heroOnly = (res.data.data || [])
-          .filter((img) => img.section === "banquet_hero" && img.isActive !== false)
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        setHeroImages(heroOnly);
-      } catch (e) { console.error(e); }
-    })();
-  }, []);
+ // Pull hero photos uploaded via the admin Gallery manager (section: "hero")
+useEffect(() => {
+  (async () => {
+    try {
+      const res = await api.get("/gallery", { params: { section: "banquet_hero" } });
+      const heroOnly = (res.data.data || [])
+        .filter((img) => img.isActive !== false)
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      setHeroImages(heroOnly);
+    } catch (e) { console.error(e); }
+  })();
+}, []);
 
   return (
     <div className="bg-surface">
