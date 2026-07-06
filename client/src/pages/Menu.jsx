@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import Navbar from "../components/common/Navbar";
 import api from "../utils/api";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
@@ -23,19 +22,23 @@ function RotatingTagline() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let hideTimeout;
     const interval = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
+      hideTimeout = setTimeout(() => {
         setIndex(prev => (prev + 1) % TAGLINES.length);
         setVisible(true);
       }, 400);
     }, 3000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(hideTimeout);
+    };
   }, []);
 
   return (
     <p
-      className={`font-body text-label-caps uppercase tracking-widest text-secondary mb-2 transition-all duration-400 ${
+      className={`font-body text-label-caps uppercase tracking-widest text-secondary mb-2 transition-all duration-[400ms] ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"
       }`}
     >
@@ -72,23 +75,37 @@ function CategoryTabs({ category, setCategory, headerVisible }) {
   const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0 });
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const measure = () => {
-      const el = containerRef.current?.querySelector(`[data-cat="${category}"]`);
-      if (el && containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const rect = el.getBoundingClientRect();
-        setPill({
-          left: rect.left - containerRect.left,
-          top: rect.top - containerRect.top,
-          width: rect.width,
-          height: rect.height,
-        });
-      }
+      const el = container.querySelector(`[data-cat="${category}"]`);
+      if (!el) return;
+      const containerRect = container.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      setPill({
+        left: rect.left - containerRect.left,
+        top: rect.top - containerRect.top,
+        width: rect.width,
+        height: rect.height,
+      });
     };
+
     measure();
-    // tabs can wrap onto a different number of rows as the viewport changes width
+
+    // the tab buttons animate in on their own (translate/opacity), so the rect we
+    // grab above may be mid-flight — re-measure once those transitions actually finish
+    container.addEventListener("transitionend", measure);
+    // also catches font-load reflows, wrapping changes, etc.
+    const ro = new ResizeObserver(measure);
+    ro.observe(container);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+
+    return () => {
+      container.removeEventListener("transitionend", measure);
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [category, headerVisible]);
 
   return (
@@ -99,7 +116,7 @@ function CategoryTabs({ category, setCategory, headerVisible }) {
       }`}
     >
       <span
-        className="absolute bg-secondary rounded-full transition-all duration-400 ease-out"
+        className="absolute bg-secondary rounded-full transition-all duration-[400ms] ease-out"
         style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height, zIndex: 0 }}
       />
       {CATEGORIES.map((c, i) => (
@@ -136,6 +153,14 @@ function MenuCard({ item, index, gridVisible }) {
   };
   const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
 
+  // combine the reveal (translateY/scale) and hover-tilt (rotateX/rotateY) into one
+  // transform string — an inline `transform` always overrides Tailwind's translate-y-*/
+  // scale-* utility classes, so composing them separately caused the reveal animation
+  // to snap into place instead of actually sliding/scaling in.
+  const translateY = show ? 0 : 40; // px, matches the old translate-y-10
+  const scale = show ? 1 : 0.95;
+  const transform = `translateY(${translateY}px) scale(${scale}) perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`;
+
   return (
     <div
       ref={ref}
@@ -143,10 +168,10 @@ function MenuCard({ item, index, gridVisible }) {
       onMouseLeave={handleMouseLeave}
       style={{
         transitionDelay: show ? `${(index % 6) * 80}ms` : "0ms",
-        transform: show ? `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` : undefined,
+        transform,
       }}
       className={`bg-surface rounded-xl overflow-hidden border border-outline-variant premium-shadow group transition-all duration-700 will-change-transform hover:shadow-2xl ${
-        show ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-10 scale-95"
+        show ? "opacity-100" : "opacity-0"
       }`}
     >
       <div className="relative aspect-video bg-surface-container overflow-hidden">
@@ -182,7 +207,7 @@ function MenuCard({ item, index, gridVisible }) {
             <span
               key={d}
               style={{ transitionDelay: show ? `${300 + (index % 6) * 80 + di * 60}ms` : "0ms" }}
-              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full transition-all duration-400 ${
+              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full transition-all duration-[400ms] ${
                 show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
               } ${DIETARY_COLORS[d] || "bg-surface-container text-on-surface-variant"}`}
             >
@@ -240,7 +265,12 @@ export default function Menu() {
       .finally(() => setLoading(false));
   }, []);
 
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setFade(false);
     const t = setTimeout(() => setFade(true), 60);
     return () => clearTimeout(t);
