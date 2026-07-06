@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 const formatCapacity = (min, max) => {
   if (!min && !max) return "Flexible capacity";
@@ -97,7 +98,6 @@ function HeroPhotoComposition({ images }) {
 
   return (
     <div className="relative w-[260px] sm:w-[320px] md:w-[380px] lg:w-[420px] mx-auto" style={{ aspectRatio: "0.82" }}>
-      {/* Orbiting curved text badge */}
       <svg
         className="absolute -top-5 -right-5 md:-top-7 md:-right-7 w-24 h-24 md:w-28 md:h-28 text-secondary spin-slow"
         viewBox="0 0 120 120"
@@ -112,7 +112,6 @@ function HeroPhotoComposition({ images }) {
         </text>
       </svg>
 
-      {/* Main arch photo */}
       <div className="absolute inset-0 rounded-t-full rounded-b-[2.5rem] border-[6px] border-secondary/25 overflow-hidden shadow-xl bg-surface-container-high">
         {mainImg ? (
           <img
@@ -128,7 +127,6 @@ function HeroPhotoComposition({ images }) {
         )}
       </div>
 
-      {/* Dashed connector */}
       <svg
         className="absolute left-[-6%] bottom-[10%] w-[45%] h-[30%] text-secondary/50 pointer-events-none"
         viewBox="0 0 100 70"
@@ -137,7 +135,6 @@ function HeroPhotoComposition({ images }) {
         <path d="M95,5 Q40,10 15,55" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 5" />
       </svg>
 
-      {/* Floating circular photo */}
       <div className="floating-card absolute left-[-10%] bottom-[6%] w-[34%] aspect-square rounded-full border-4 border-white shadow-lg overflow-hidden bg-surface-container-high">
         {floatImg ? (
           <img
@@ -153,7 +150,6 @@ function HeroPhotoComposition({ images }) {
         )}
       </div>
 
-      {/* Decorative flower */}
       <span className="absolute -bottom-3 right-3 text-2xl opacity-80 select-none" aria-hidden="true">🌸</span>
 
       <style>{`
@@ -189,11 +185,131 @@ function HeroPhotoComposition({ images }) {
   );
 }
 
+function HallCard({ hall, index, onOpen }) {
+  const [ref, visible] = useScrollReveal();
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    setTilt({ x: py * -5, y: px * 5 });
+  };
+  const handleMouseLeave = () => setTilt({ x: 0, y: 0 });
+
+  return (
+    <div
+      ref={ref}
+      onClick={onOpen}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transitionDelay: visible ? `${(index % 6) * 110}ms` : "0ms",
+        transform: visible ? `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` : undefined,
+      }}
+      className={`cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm flex flex-col will-change-transform transition-all duration-700 hover:-translate-y-2 hover:shadow-xl ${
+        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-14 scale-95"
+      }`}
+    >
+      <div className="relative h-56 md:h-72 overflow-hidden group">
+        {hall.images?.[0]?.url ? (
+          <img
+            src={hall.images[0].url}
+            alt={hall.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+          />
+        ) : (
+          <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+            <span className="material-symbols-outlined text-[40px]">image</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        {hall.featured && (
+          <div
+            style={{ transitionDelay: visible ? `${(index % 6) * 110 + 200}ms` : "0ms" }}
+            className={`absolute top-4 left-4 bg-secondary text-on-secondary px-4 py-1 rounded-full font-body text-[10px] uppercase tracking-wider transition-all duration-500 ${
+              visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
+            }`}
+          >
+            Premium
+          </div>
+        )}
+        <div
+          style={{ transitionDelay: visible ? `${(index % 6) * 110 + 250}ms` : "0ms" }}
+          className={`absolute top-4 right-4 bg-primary/80 backdrop-blur-md text-white px-3 py-1 rounded-full flex items-center gap-1 transition-all duration-500 ${
+            visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[16px]">groups</span>
+          <span className="font-body text-[10px] uppercase tracking-wider">
+            {formatCapacity(hall.capacityMin, hall.capacityMax)}
+          </span>
+        </div>
+      </div>
+      <div className="p-6 md:p-8 flex-grow flex flex-col">
+        <h3 className="font-body text-title-lg text-on-surface mb-3 relative inline-block w-fit">
+          {hall.name}
+          <span className="absolute left-0 -bottom-0.5 h-[1.5px] bg-secondary w-0 group-hover:w-full transition-all duration-500 ease-out" />
+        </h3>
+        {hall.amenities?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            {hall.amenities.slice(0, 3).map((a, ai) => (
+              <span
+                key={a}
+                style={{ transitionDelay: visible ? `${(index % 6) * 110 + 300 + ai * 80}ms` : "0ms" }}
+                className={`bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-body text-[10px] uppercase tracking-wider transition-all duration-400 ${
+                  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                }`}
+              >
+                {a}
+              </span>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          className="mt-auto w-full border border-secondary text-secondary font-body text-[11px] uppercase tracking-wider py-4 rounded hover:bg-secondary hover:text-white transition-all duration-300"
+        >
+          View Availability &amp; Photos
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HallsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rounded-xl overflow-hidden bg-white shadow-sm">
+          <div className="h-56 md:h-72 bg-surface-container-high relative overflow-hidden">
+            <div className="absolute inset-0 -translate-x-full animate-hall-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+          </div>
+          <div className="p-6 md:p-8 space-y-3">
+            <div className="h-4 w-2/3 bg-surface-container-high rounded relative overflow-hidden">
+              <div className="absolute inset-0 -translate-x-full animate-hall-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+            </div>
+            <div className="h-3 w-1/2 bg-surface-container-high rounded relative overflow-hidden">
+              <div className="absolute inset-0 -translate-x-full animate-hall-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+            </div>
+          </div>
+        </div>
+      ))}
+      <style>{`
+        @keyframes hallShimmer { to { transform: translateX(100%); } }
+        .animate-hall-shimmer { animation: hallShimmer 1.4s infinite; }
+        @media (prefers-reduced-motion: reduce) { .animate-hall-shimmer { animation: none; } }
+      `}</style>
+    </div>
+  );
+}
+
 export default function BanquetHalls() {
   const [halls, setHalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroImages, setHeroImages] = useState([]);
   const navigate = useNavigate();
+  const [collectionRef, collectionVisible] = useScrollReveal();
 
   useEffect(() => {
     (async () => {
@@ -205,27 +321,24 @@ export default function BanquetHalls() {
     })();
   }, []);
 
- // Pull hero photos uploaded via the admin Gallery manager (section: "hero")
-useEffect(() => {
-  (async () => {
-    try {
-      const res = await api.get("/gallery", { params: { section: "banquet_hero" } });
-      const heroOnly = (res.data.data || [])
-        .filter((img) => img.isActive !== false)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      setHeroImages(heroOnly);
-    } catch (e) { console.error(e); }
-  })();
-}, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/gallery", { params: { section: "banquet_hero" } });
+        const heroOnly = (res.data.data || [])
+          .filter((img) => img.isActive !== false)
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setHeroImages(heroOnly);
+      } catch (e) { console.error(e); }
+    })();
+  }, []);
 
   return (
     <div className="bg-surface">
-      {/* Hero */}
       <section className="relative w-full py-16 md:py-20 px-margin-mobile md:px-margin-desktop overflow-hidden bg-surface-container-lowest">
         <span className="absolute top-8 left-6 md:left-10 text-3xl opacity-70 select-none" aria-hidden="true">🌸</span>
 
         <div className="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left */}
           <div className="order-2 lg:order-1 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
               <h1 className="font-display text-headline-md md:text-display-lg text-primary leading-tight">
@@ -262,7 +375,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Right */}
           <div className="order-1 lg:order-2">
             <HeroPhotoComposition images={heroImages} />
           </div>
@@ -280,69 +392,36 @@ useEffect(() => {
         `}</style>
       </section>
 
-      {/* Halls grid */}
       <section id="collection" className="py-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
-        <div className="text-center mb-12 md:mb-16">
+        <div
+          ref={collectionRef}
+          className={`text-center mb-12 md:mb-16 transition-all duration-700 ${
+            collectionVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+        >
           <h2 className="font-display text-headline-md text-primary mb-4">The Collection</h2>
-          <div className="w-20 h-px bg-secondary mx-auto" />
+          <div
+            className={`h-px bg-secondary mx-auto transition-all duration-700 delay-200 ${
+              collectionVisible ? "w-20" : "w-0"
+            }`}
+          />
         </div>
 
         {loading ? (
-          <p className="font-body text-body-sm text-on-surface-variant text-center">Loading venues…</p>
+          <HallsSkeleton />
         ) : halls.length === 0 ? (
           <div className="text-center py-16 text-on-surface-variant font-body text-body-sm border-2 border-dashed border-outline-variant rounded-xl">
             Venues coming soon.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">
-            {halls.map((hall) => (
-              <div
+            {halls.map((hall, index) => (
+              <HallCard
                 key={hall._id}
-                onClick={() => navigate(`/banquet-halls/${hall._id}`)}
-                className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-sm flex flex-col transition-transform duration-400 hover:-translate-y-2 hover:shadow-lg"
-              >
-                <div className="relative h-56 md:h-72 overflow-hidden">
-                  {hall.images?.[0]?.url ? (
-                    <img src={hall.images[0].url} alt={hall.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-                      <span className="material-symbols-outlined text-[40px]">image</span>
-                    </div>
-                  )}
-                  {hall.featured && (
-                    <div className="absolute top-4 left-4 bg-secondary text-on-secondary px-4 py-1 rounded-full font-body text-[10px] uppercase tracking-wider">
-                      Premium
-                    </div>
-                  )}
-                  <div className="absolute top-4 right-4 bg-primary/80 backdrop-blur-md text-white px-3 py-1 rounded-full flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">groups</span>
-                    <span className="font-body text-[10px] uppercase tracking-wider">
-                      {formatCapacity(hall.capacityMin, hall.capacityMax)}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6 md:p-8 flex-grow flex flex-col">
-                  <h3 className="font-body text-title-lg text-on-surface mb-3">{hall.name}</h3>
-                  {hall.amenities?.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-8">
-                      {hall.amenities.slice(0, 3).map((a) => (
-                        <span
-                          key={a}
-                          className="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-body text-[10px] uppercase tracking-wider"
-                        >
-                          {a}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigate(`/banquet-halls/${hall._id}`); }}
-                    className="mt-auto w-full border border-secondary text-secondary font-body text-[11px] uppercase tracking-wider py-4 rounded hover:bg-secondary hover:text-white transition-all"
-                  >
-                    View Availability &amp; Photos
-                  </button>
-                </div>
-              </div>
+                hall={hall}
+                index={index}
+                onOpen={() => navigate(`/banquet-halls/${hall._id}`)}
+              />
             ))}
           </div>
         )}

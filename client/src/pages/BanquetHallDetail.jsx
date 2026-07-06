@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api, { createHallEnquiry } from "../utils/api";
 
@@ -9,11 +9,22 @@ const formatCapacity = (min, max) => {
   return `${min} - ${max} Pax`;
 };
 
+const SLIDE_DURATION = 450; // ms
+
 export default function BanquetHallDetail() {
   const { id } = useParams();
   const [hall, setHall] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ---- image carousel state ----
   const [activeImg, setActiveImg] = useState(0);
+  const [previousImg, setPreviousImg] = useState(null); // index of the image sliding out
+  const [direction, setDirection] = useState(1); // 1 = next (slides in from right), -1 = prev (slides in from left)
+  const [animating, setAnimating] = useState(false);
+  const slideTimeoutRef = useRef(null);
+  const rafRef = useRef(null);
+
+  const [pageVisible, setPageVisible] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", date: "", pax: "100 - 250" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -28,26 +39,79 @@ export default function BanquetHallDetail() {
     })();
   }, [id]);
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-    await createHallEnquiry({
-      hallId: hall._id,
-      hallName: hall.name,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      date: form.date,
-      pax: form.pax,
+  useEffect(() => {
+    if (!loading && hall) {
+      const t = setTimeout(() => setPageVisible(true), 30);
+      return () => clearTimeout(t);
+    }
+  }, [loading, hall]);
+
+  // cleanup any pending timers/frames on unmount
+  useEffect(() => {
+    return () => {
+      if (slideTimeoutRef.current) clearTimeout(slideTimeoutRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const changeImage = (index, dir) => {
+    if (!hall?.images?.length || index === activeImg) return;
+
+    // clear any in-flight animation so rapid clicks don't break state
+    if (slideTimeoutRef.current) clearTimeout(slideTimeoutRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    setPreviousImg(activeImg);
+    setDirection(dir);
+    setActiveImg(index);
+    setAnimating(false);
+
+    // wait a frame so the "start" position is painted before we animate to the "end" position
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = requestAnimationFrame(() => setAnimating(true));
     });
-    setSubmitted(true);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    setSubmitting(false);
-  }
-};
+
+    slideTimeoutRef.current = setTimeout(() => {
+      setPreviousImg(null);
+      setAnimating(false);
+    }, SLIDE_DURATION);
+  };
+
+  const goPrev = () => {
+    if (!hall?.images?.length) return;
+    changeImage((activeImg - 1 + hall.images.length) % hall.images.length, -1);
+  };
+
+  const goNext = () => {
+    if (!hall?.images?.length) return;
+    changeImage((activeImg + 1) % hall.images.length, 1);
+  };
+
+  const goTo = (index) => {
+    if (index === activeImg) return;
+    changeImage(index, index > activeImg ? 1 : -1);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await createHallEnquiry({
+        hallId: hall._id,
+        hallName: hall.name,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        date: form.date,
+        pax: form.pax,
+      });
+      setSubmitted(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return <div className="pt-32 pb-32 text-center font-body text-body-sm text-on-surface-variant">Loading…</div>;
@@ -63,7 +127,14 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="bg-surface">
-      <section className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pt-8">
+      <section
+        className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pt-8"
+        style={{
+          opacity: pageVisible ? 1 : 0,
+          transform: pageVisible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
+        }}
+      >
         <Link
           to="/banquet-halls"
           className="inline-flex items-center gap-1 font-body text-[11px] uppercase tracking-wider text-on-surface-variant hover:text-secondary transition mb-6"
@@ -72,13 +143,65 @@ const handleSubmit = async (e) => {
           Back to venues
         </Link>
 
-        <div className="rounded-2xl overflow-hidden mb-4 aspect-video bg-surface-container-high">
+        <div className="relative rounded-2xl overflow-hidden mb-4 aspect-video bg-surface-container-high group">
           {hall.images?.length > 0 ? (
-            <img src={hall.images[activeImg]?.url} alt={hall.name} className="w-full h-full object-cover" />
+            <>
+              {/* outgoing image slides out in the direction of travel */}
+              {previousImg !== null && (
+                <img
+                  src={hall.images[previousImg]?.url}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{
+                    transform: animating ? `translateX(${direction * -100}%)` : "translateX(0%)",
+                    transition: `transform ${SLIDE_DURATION}ms ease-in-out`,
+                  }}
+                />
+              )}
+
+              {/* incoming image slides in from the opposite edge */}
+              <img
+                key={activeImg}
+                src={hall.images[activeImg]?.url}
+                alt={hall.name}
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{
+                  transform:
+                    previousImg === null
+                      ? "translateX(0%)"
+                      : animating
+                      ? "translateX(0%)"
+                      : `translateX(${direction * 100}%)`,
+                  transition: previousImg !== null ? `transform ${SLIDE_DURATION}ms ease-in-out` : "none",
+                }}
+              />
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-on-surface-variant">
               <span className="material-symbols-outlined text-[48px]">image</span>
             </div>
+          )}
+
+          {hall.images?.length > 1 && (
+            <>
+              <button
+                onClick={goPrev}
+                aria-label="Previous image"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 z-10"
+              >
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button
+                onClick={goNext}
+                aria-label="Next image"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-on-surface opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-110 z-10"
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+              <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full font-body text-[10px] uppercase tracking-wider z-10">
+                {activeImg + 1} / {hall.images.length}
+              </div>
+            </>
           )}
         </div>
 
@@ -87,9 +210,9 @@ const handleSubmit = async (e) => {
             {hall.images.map((img, i) => (
               <button
                 key={img.publicId}
-                onClick={() => setActiveImg(i)}
-                className={`shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition ${
-                  activeImg === i ? "border-secondary" : "border-transparent opacity-70 hover:opacity-100"
+                onClick={() => goTo(i)}
+                className={`shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                  activeImg === i ? "border-secondary scale-105" : "border-transparent opacity-70 hover:opacity-100 hover:scale-105"
                 }`}
               >
                 <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -99,7 +222,14 @@ const handleSubmit = async (e) => {
         )}
       </section>
 
-      <section className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-section-gap grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <section
+        className="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-section-gap grid grid-cols-1 lg:grid-cols-2 gap-16"
+        style={{
+          opacity: pageVisible ? 1 : 0,
+          transform: pageVisible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.6s ease-out 0.15s, transform 0.6s ease-out 0.15s",
+        }}
+      >
         <div>
           <h1 className="font-display text-headline-md text-primary mb-4">{hall.name}</h1>
           <div className="flex items-center gap-2 text-on-surface-variant mb-6">
@@ -185,7 +315,7 @@ const handleSubmit = async (e) => {
                   </select>
                 </div>
                 <button type="submit" disabled={submitting}
-                  className="w-full bg-secondary text-on-primary font-body text-[11px] uppercase tracking-wider py-4 rounded-full hover:opacity-90 transition disabled:opacity-50">
+                  className="w-full bg-secondary text-on-primary font-body text-[11px] uppercase tracking-wider py-4 rounded-full hover:opacity-90 transition disabled:opacity-50 hover:scale-[1.02]">
                   {submitting ? "Sending…" : "Request Availability"}
                 </button>
               </form>
