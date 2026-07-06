@@ -98,6 +98,21 @@ export default function Hero() {
         </div>
       )}
 
+      {/* Wave cut at bottom, overlapping the hero image */}
+      <div className="absolute bottom-0 left-0 w-full z-[2] leading-[0]">
+        <svg
+          className="w-full h-[80px] md:h-[120px]"
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0,60 C240,110 480,10 720,60 C960,110 1200,10 1440,60 L1440,120 L0,120 Z"
+            fill="#FDF8F5"
+          />
+        </svg>
+      </div>
+
       <FloralStyles />
       <style>{`
         @keyframes heroKenburns {
