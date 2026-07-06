@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import { useBookings } from "../../hooks/useBookings";
 import api, { updateBooking } from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const FILTERS     = ["All", "Pending", "Confirmed", "In Progress", "Completed", "Cancelled"];
 const EVENT_TYPES = ["Wedding", "Engagement", "Birthday", "Corporate", "Private Dining", "Social Soiree", "Other"];
@@ -480,48 +482,58 @@ function StatusDropdown({ value, onChange, id }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   BOOKINGS TABLE
+   BOOKINGS TABLE — cleaned up spacing, alignment, and row rhythm
 ══════════════════════════════════════════════════════════════════════════ */
-function BookingsTable({ rows, onStatusChange, onView }) {
+function BookingsTable({ rows, onStatusChange, onView, onDelete }) {
   if (!rows.length) {
     return (
-      <div className="text-center py-16 text-on-surface-variant font-body text-body-sm">
+      <div className="text-center py-16 text-on-surface-variant font-body text-body-sm border-2 border-dashed border-outline-variant rounded-xl">
         No bookings found.
       </div>
     );
   }
 
   return (
-    <>
-      <div className="overflow-x-auto rounded-xl premium-shadow">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-outline-variant bg-surface-container-lowest">
-              {["Client", "Event", "Date", "Guests", "Package", "Amount", "Status", ""].map((h) => (
-                <th key={h} className="px-4 py-3 font-body text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((b) => (
-              <tr key={b._id} className="border-b border-outline-variant/40 hover:bg-surface-container-lowest/60 transition">
-                <td className="px-4 py-3">
-                  <p className="font-body text-body-sm text-on-surface font-medium">{b.clientName}</p>
-                  <p className="font-body text-[11px] text-on-surface-variant">{b.clientEmail}</p>
-                </td>
-                <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant">{b.eventType}</td>
-                <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">
-                  {b.eventDate ? new Date(b.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}
-                </td>
-                <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant">{b.guestCount ?? "—"}</td>
-                <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant">{b.packageType}</td>
-                <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant">
-                  {b.totalAmount ? fmt(b.totalAmount) : b.estimatedBudget ? fmt(b.estimatedBudget) : "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusDropdown value={b.status} onChange={onStatusChange} id={b._id} />
-                </td>
-                <td className="px-4 py-3">
+    <div className="overflow-x-auto rounded-2xl premium-shadow border border-outline-variant/50">
+      <table className="w-full text-left border-collapse min-w-[900px]">
+        <thead>
+          <tr className="bg-surface-container-lowest">
+            {["Client", "Event", "Date", "Guests", "Package", "Amount", "Status", ""].map((h) => (
+              <th
+                key={h}
+                className="px-4 py-3.5 font-body text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap border-b border-outline-variant"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((b, i) => (
+            <tr
+              key={b._id}
+              className={`transition-colors hover:bg-surface-container-lowest/70 ${
+                i !== rows.length - 1 ? "border-b border-outline-variant/30" : ""
+              }`}
+            >
+              <td className="px-4 py-4 align-middle">
+                <p className="font-body text-body-sm text-on-surface font-medium leading-tight">{b.clientName}</p>
+                <p className="font-body text-[11px] text-on-surface-variant mt-0.5">{b.clientEmail}</p>
+              </td>
+              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant">{b.eventType}</td>
+              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant whitespace-nowrap">
+                {b.eventDate ? new Date(b.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}
+              </td>
+              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant">{b.guestCount ?? "—"}</td>
+              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant">{b.packageType}</td>
+              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface font-medium whitespace-nowrap">
+                {b.totalAmount ? fmt(b.totalAmount) : b.estimatedBudget ? fmt(b.estimatedBudget) : "—"}
+              </td>
+              <td className="px-4 py-4 align-middle">
+                <StatusDropdown value={b.status} onChange={onStatusChange} id={b._id} />
+              </td>
+              <td className="px-4 py-4 align-middle">
+                <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                   <button
                     onClick={() => onView(b)}
                     className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-outline-variant text-[11px] font-body uppercase tracking-wider text-on-surface-variant hover:border-secondary hover:text-secondary hover:bg-secondary/5 transition"
@@ -529,14 +541,20 @@ function BookingsTable({ rows, onStatusChange, onView }) {
                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                     View
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-    </>
+                  <button
+                    onClick={() => onDelete(b._id, b.clientName)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50 transition"
+                    title="Delete booking"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -552,6 +570,7 @@ export default function ManageBookings() {
   const [selected,     setSelected]     = useState(null);
 
   const { bookings, loading, refresh } = useBookings(activeFilter);
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   /* ── Sort & search ──────────────────────────────────────────────────── */
   const toggleSort = (field) => {
@@ -585,6 +604,17 @@ export default function ManageBookings() {
   const handleStatusChange = async (id, status) => {
     await updateBooking(id, { status });
     refresh();
+  };
+
+  const handleDeleteBooking = async (id, name) => {
+    const ok = await confirm(`Delete the booking for "${name}" permanently?`);
+    if (!ok) return;
+    try {
+      await api.delete(`/bookings/${id}`);
+      refresh();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -675,7 +705,7 @@ export default function ManageBookings() {
         {/* Table */}
         {loading
           ? <p className="font-body text-body-sm text-on-surface-variant">Loading…</p>
-          : <BookingsTable rows={processed} onStatusChange={handleStatusChange} onView={setSelected} />}
+          : <BookingsTable rows={processed} onStatusChange={handleStatusChange} onView={setSelected} onDelete={handleDeleteBooking} />}
       </main>
 
       {showModal && (
@@ -689,6 +719,8 @@ export default function ManageBookings() {
           onUpdated={() => { refresh(); }}
         />
       )}
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }

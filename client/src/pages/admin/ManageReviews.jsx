@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import StarRating from "../../components/reviews/StarRating";
 import { fetchReviewsAdmin, updateReview, deleteReview } from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 export default function ManageReviews() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter,  setFilter]  = useState("all"); // all | pending | approved
+
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   const load = () => {
     setLoading(true);
@@ -17,9 +21,14 @@ export default function ManageReviews() {
 
   const handleApprove  = (id) => updateReview(id, { isApproved: true  }).then(load);
   const handleReject   = (id) => updateReview(id, { isApproved: false }).then(load);
-  const handleDelete   = (id) => deleteReview(id).then(load);
   const handleVerify   = (id, current) => updateReview(id, { isVerified: !current }).then(load);
   const handleFeature  = (id, current) => updateReview(id, { isFeatured: !current }).then(load);
+
+  const handleDelete = async (id) => {
+    const ok = await confirm("Delete this review permanently?");
+    if (!ok) return;
+    deleteReview(id).then(load);
+  };
 
   const displayed = reviews.filter(r => {
     if (filter === "pending")  return !r.isApproved;
@@ -156,6 +165,8 @@ export default function ManageReviews() {
           </div>
         )}
       </main>
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }

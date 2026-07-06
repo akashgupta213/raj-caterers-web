@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import api from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 export default function ManageBanquetHalls() {
   const [halls, setHalls] = useState([]);
@@ -13,6 +15,8 @@ export default function ManageBanquetHalls() {
   const [files, setFiles] = useState([]); // [{ file, preview }]
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const fileRef = useRef();
+
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -71,7 +75,8 @@ export default function ManageBanquetHalls() {
   };
 
   const handleDeleteHall = async (id, name) => {
-    if (!window.confirm(`Delete "${name}" and all its photos permanently?`)) return;
+    const ok = await confirm(`Delete "${name}" and all its photos permanently?`);
+    if (!ok) return;
     try { await api.delete(`/banquet-halls/${id}`); load(); } catch (e) { console.error(e); }
   };
 
@@ -214,16 +219,18 @@ export default function ManageBanquetHalls() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {halls.map((hall) => (
-              <HallCard key={hall._id} hall={hall} onChanged={load} onDelete={handleDeleteHall} onToggle={handleToggleActive} />
+              <HallCard key={hall._id} hall={hall} onChanged={load} onDelete={handleDeleteHall} onToggle={handleToggleActive} confirm={confirm} />
             ))}
           </div>
         )}
       </main>
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }
 
-function HallCard({ hall, onChanged, onDelete, onToggle }) {
+function HallCard({ hall, onChanged, onDelete, onToggle, confirm }) {
   const [expanded, setExpanded] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -261,7 +268,8 @@ function HallCard({ hall, onChanged, onDelete, onToggle }) {
   };
 
   const handleDeleteImage = async (publicId) => {
-    if (!window.confirm("Remove this photo?")) return;
+    const ok = await confirm("Remove this photo?");
+    if (!ok) return;
     try {
       await api.delete(`/banquet-halls/${hall._id}/images`, { data: { publicId } });
       onChanged();

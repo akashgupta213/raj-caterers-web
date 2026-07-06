@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import { fetchAllEnquiries, updateEnquiry, deleteEnquiry } from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const STATUS_OPTIONS = ["New", "In Progress", "Contacted", "Converted", "Closed"];
 
@@ -20,6 +22,8 @@ export default function ManageEnquiries() {
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [expanded, setExpanded]     = useState(null);
+
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -61,7 +65,8 @@ export default function ManageEnquiries() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete the enquiry from "${name}" permanently?`)) return;
+    const ok = await confirm(`Delete the enquiry from "${name}" permanently?`);
+    if (!ok) return;
     setDeletingId(id);
     try {
       await deleteEnquiry(id);
@@ -188,6 +193,8 @@ export default function ManageEnquiries() {
           </div>
         )}
       </main>
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }

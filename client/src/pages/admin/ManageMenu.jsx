@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import api from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const CATEGORIES = ["Appetizers", "Main Course", "Desserts", "Beverages", "Live Counters"];
 const DIETARY_OPTIONS = ["Vegetarian", "Vegan", "Halal", "Gluten Free"];
@@ -18,6 +20,8 @@ export default function ManageMenu() {
   const [file,     setFile]     = useState(null);
   const [showForm, setShowForm] = useState(false);
   const fileRef = useRef();
+
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -87,7 +91,8 @@ export default function ManageMenu() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this menu item?")) return;
+    const ok = await confirm("Delete this menu item?");
+    if (!ok) return;
     await api.delete(`/menu/${id}`);
     load();
   };
@@ -287,6 +292,8 @@ export default function ManageMenu() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }

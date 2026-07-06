@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import api from "../../utils/api";
+import { useConfirm } from "../../hooks/useConfirm";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const SECTIONS = [
   { value: "hero",          label: "Hero Slider" },
@@ -26,6 +28,8 @@ export default function ManageGallery() {
   const [files, setFiles] = useState([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const fileRef = useRef();
+
+  const { confirm, dialog, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -109,7 +113,8 @@ export default function ManageGallery() {
   };
 
   const handleDelete = async (id, label) => {
-    if (!window.confirm(`Delete this image from ${label}?`)) return;
+    const ok = await confirm(`Delete this image from ${label}?`);
+    if (!ok) return;
     await api.delete(`/gallery/${id}`);
     load();
   };
@@ -319,6 +324,8 @@ export default function ManageGallery() {
               </div>
         }
       </main>
+
+      <ConfirmDialog {...dialog} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }
