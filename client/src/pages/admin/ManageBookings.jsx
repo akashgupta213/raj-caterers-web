@@ -32,6 +32,37 @@ const fmt = (n) => !n ? "—" : n >= 10000000 ? `₹${(n / 10000000).toFixed(2)}
 const SORT_FIELDS  = ["name", "date", "amount"];
 const SORT_LABELS  = { name: "Name", date: "Date", amount: "Amount" };
 
+/* ─── Image helper: resize + compress a File into a base64 JPEG ──────── */
+const fileToCompressedBase64 = (file, maxDim = 1280, quality = 0.72) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
 /* ══════════════════════════════════════════════════════════════════════════
    BOOKING DRAWER (slide from right)
 ══════════════════════════════════════════════════════════════════════════ */
@@ -269,11 +300,16 @@ function NewBookingModal({ onClose, onSuccess }) {
     setError("");
     setLoading(true);
     try {
-      // TODO: switch to multipart/form-data once multer is set up on the backend
+      // Compress + convert each picked image to base64 before sending
+      const menuImageData = await Promise.all(
+        menuImages.map((img) => fileToCompressedBase64(img.file))
+      );
+
       await api.post("/bookings", {
         ...form,
         guestCount:      Number(form.guestCount),
         estimatedBudget: Number(form.estimatedBudget),
+        menuImages:      menuImageData,
       });
       onSuccess?.();
       onClose();

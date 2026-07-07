@@ -22,6 +22,7 @@ const bookingSchema = new mongoose.Schema(
     specialRequests: { type: String, trim: true },
     dietaryNeeds:    { type: String, trim: true },
     estimatedBudget: { type: Number },
+    menuImages:      [{ type: String }],
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "In Progress", "Completed", "Cancelled"],

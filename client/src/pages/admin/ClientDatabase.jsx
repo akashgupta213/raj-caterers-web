@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
-import { fetchClients } from "../../utils/api";
+import api, { fetchClients } from "../../utils/api";
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 const fmt = (n) =>
@@ -163,8 +163,11 @@ function TopSpendersChart({ clients }) {
 }
 
 /* ─── Client Row ──────────────────────────────────────────────────────── */
-function ClientRow({ c }) {
+function ClientRow({ c, onUpdateSpent }) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing]   = useState(false);
+  const [spentInput, setSpentInput] = useState(c.totalSpent || "");
+  const [saving, setSaving]     = useState(false);
 
   const statusPill = {
     "Completed":   "bg-emerald-100 text-emerald-700",
@@ -172,6 +175,27 @@ function ClientRow({ c }) {
     "In Progress": "bg-blue-100 text-blue-700",
     "Pending":     "bg-amber-100 text-amber-700",
     "Cancelled":   "bg-red-100 text-red-600",
+  };
+
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    const amt = Number(spentInput);
+    if (Number.isNaN(amt)) return;
+    setSaving(true);
+    try {
+      await onUpdateSpent(c._id, amt);
+      setEditing(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = (e) => {
+    e.stopPropagation();
+    setSpentInput(c.totalSpent || "");
+    setEditing(false);
   };
 
   return (
@@ -199,9 +223,41 @@ function ClientRow({ c }) {
         <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant hidden sm:table-cell">
           {c.clientPhone || c.phone || "—"}
         </td>
-        <td className="px-4 py-3 font-body text-body-sm text-secondary font-semibold">
-          {fmt(c.totalSpent)}
+
+        {/* Total Spent — editable */}
+        <td className="px-4 py-3 font-body text-body-sm text-secondary font-semibold" onClick={(e) => e.stopPropagation()}>
+          {editing ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min="0"
+                value={spentInput}
+                onChange={(e) => setSpentInput(e.target.value)}
+                className="w-24 bg-surface border border-outline-variant rounded-lg px-2 py-1 font-body text-body-sm focus:outline-none focus:border-secondary"
+                autoFocus
+              />
+              <button onClick={handleSave} disabled={saving} className="text-emerald-600 hover:opacity-80">
+                <span className="material-symbols-outlined text-[16px]">
+                  {saving ? "progress_activity" : "check"}
+                </span>
+              </button>
+              <button onClick={handleCancel} className="text-red-500 hover:opacity-80">
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 group">
+              {fmt(c.totalSpent)}
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+                className="opacity-0 group-hover:opacity-100 transition text-on-surface-variant hover:text-secondary"
+              >
+                <span className="material-symbols-outlined text-[14px]">edit</span>
+              </button>
+            </div>
+          )}
         </td>
+
         <td className="px-4 py-3 font-body text-body-sm text-on-surface-variant hidden md:table-cell">
           {c.bookingCount ?? 0}
         </td>
@@ -284,6 +340,11 @@ export default function ClientDatabase() {
   const toggleSort = (field) => {
     if (sortField === field) setSortDir((d) => d === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("desc"); }
+  };
+
+  const handleUpdateSpent = async (clientId, newAmount) => {
+    await api.put(`/clients/${clientId}`, { totalSpend: newAmount });
+    load(search);
   };
 
   /* ── Derived stats ──────────────────────────────────────────────────── */
@@ -397,7 +458,7 @@ export default function ClientDatabase() {
                   </thead>
                   <tbody>
                     {sorted.map((c) => (
-                      <ClientRow key={c._id || c.clientEmail || c.email} c={c} />
+                      <ClientRow key={c._id || c.clientEmail || c.email} c={c} onUpdateSpent={handleUpdateSpent} />
                     ))}
                   </tbody>
                 </table>

@@ -9,11 +9,11 @@ const { sendEmail } = require("../utils/sendEmail");
 const createBooking = async (req, res) => {
   try {
     const {
-      clientName, clientEmail, clientPhone,
-      eventType, eventDate, eventTime, venue,
-      guestCount, packageType, specialRequests,
-      dietaryNeeds, estimatedBudget,
-    } = req.body;
+  clientName, clientEmail, clientPhone,
+  eventType, eventDate, eventTime, venue,
+  guestCount, packageType, specialRequests,
+  dietaryNeeds, estimatedBudget, menuImages,
+} = req.body;
 
     // Create or find client
     let client = await Client.findOne({ email: clientEmail });
@@ -23,15 +23,21 @@ const createBooking = async (req, res) => {
         email: clientEmail,
         phone: clientPhone,
       });
+    } else {
+      // Keep client record in sync with latest booking details
+      let changed = false;
+      if (client.name !== clientName) { client.name = clientName; changed = true; }
+      if (client.phone !== clientPhone) { client.phone = clientPhone; changed = true; }
+      if (changed) await client.save();
     }
 
     const booking = await Booking.create({
-      clientName, clientEmail, clientPhone,
-      eventType, eventDate, eventTime, venue,
-      guestCount, packageType, specialRequests,
-      dietaryNeeds, estimatedBudget,
-      client: client._id,
-    });
+  clientName, clientEmail, clientPhone,
+  eventType, eventDate, eventTime, venue,
+  guestCount, packageType, specialRequests,
+  dietaryNeeds, estimatedBudget, menuImages,
+  client: client._id,
+});
 
     // Link booking to client
     client.bookings.push(booking._id);
@@ -158,6 +164,33 @@ const deleteBooking = async (req, res) => {
   try {
     const booking = await Booking.findByIdAndDelete(req.params.id);
     if (!booking) return sendError(res, 404, "Booking not found");
+
+    // Keep the linked client record in sync
+    if (booking.client) {
+      const client = await Client.findById(booking.client);
+      if (client) {
+        client.bookings = client.bookings.filter(
+          (bId) => bId.toString() !== booking._id.toString()
+        );
+        client.totalEvents = Math.max(0, (client.totalEvents || 0) - 1);
+
+        // Recompute lastEventDate from whatever bookings remain
+        const remaining = await Booking.find({ _id: { $in: client.bookings } }).select("eventDate");
+        const dates = remaining
+          .map((b) => b.eventDate)
+          .filter(Boolean)
+          .sort((a, b) => new Date(b) - new Date(a));
+        client.lastEventDate = dates[0] || null;
+
+        if (client.bookings.length === 0) {
+          // No bookings left — remove the client record entirely
+          await Client.findByIdAndDelete(client._id);
+        } else {
+          await client.save();
+        }
+      }
+    }
+
     return sendSuccess(res, 200, "Booking deleted");
   } catch (error) {
     return sendError(res, 500, error.message);
