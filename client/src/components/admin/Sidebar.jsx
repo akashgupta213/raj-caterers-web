@@ -52,7 +52,7 @@ export default function Sidebar() {
         className={`
           fixed md:sticky md:top-0
           top-0 left-0
-          h-screen md:h-screen
+          h-dvh md:h-screen
           w-64 shrink-0
           bg-inverse-surface text-inverse-on-surface
           flex flex-col
@@ -63,7 +63,7 @@ export default function Sidebar() {
         `}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+        <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
           <div>
             <h2 className="font-display text-headline-md-mobile text-gold">Raj Caterers</h2>
             <p className="font-body text-label-caps uppercase opacity-70 mt-1">Admin Panel</p>
@@ -79,7 +79,7 @@ export default function Sidebar() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 min-h-0 p-4 space-y-1 overflow-y-auto">
           {LINKS.map(l => (
             <NavLink
               key={l.to}
@@ -101,7 +101,8 @@ export default function Sidebar() {
         {/* Logout */}
         <button
           onClick={() => { logout(); nav("/admin/login"); }}
-          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5 transition"
+          className="m-4 flex items-center gap-3 px-4 py-3 rounded-lg font-body text-body-sm border border-white/10 hover:bg-white/5 transition shrink-0"
+          style={{ marginBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
         >
           <span className="material-symbols-outlined">logout</span>
           Logout
