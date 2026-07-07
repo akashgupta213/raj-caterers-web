@@ -190,7 +190,6 @@ function BookingDrawer({ booking, onClose }) {
     ["Email",            booking.clientEmail],
     ["Phone",            booking.clientPhone],
     ["Event Type",       booking.eventType],
-    ["Package",          booking.packageType],
     ["Date",             booking.eventDate ? new Date(booking.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" }) : "—"],
     ["Time",             booking.eventTime],
     ["Venue",            booking.venue],
@@ -251,7 +250,7 @@ function RecentBookingsTable({ rows }) {
         <table className="w-full text-left min-w-[500px]">
           <thead>
             <tr className="border-b border-outline-variant bg-surface-container-lowest">
-              {["Client","Event","Date","Package","Status",""].map((h) => (
+              {["Client","Event","Date","Status",""].map((h) => (
                 <th key={h} className="px-3 md:px-4 py-3 font-body text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -264,7 +263,6 @@ function RecentBookingsTable({ rows }) {
                 <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">
                   {b.eventDate ? new Date(b.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}
                 </td>
-                <td className="px-3 md:px-4 py-3 font-body text-body-sm text-on-surface-variant whitespace-nowrap">{b.packageType}</td>
                 <td className="px-3 md:px-4 py-3">
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${STATUS_PILL[b.status] || "bg-surface-container text-on-surface"}`}>
                     {b.status}
@@ -412,9 +410,7 @@ export default function Dashboard() {
   const statusCount   = (s) => filtered.filter((b) => b.status === s).length;
   const statusRevenue = (s) => filtered.filter((b) => b.status === s).reduce((sum, b) => sum + (b.totalAmount || 0), 0);
 
-  const pkgMap      = filtered.reduce((acc, b) => { acc[b.packageType] = (acc[b.packageType] || 0) + 1; return acc; }, {});
-  const pkgTotal    = filtered.length || 1;
-  const topPackages = Object.entries(pkgMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
 
   const chartData = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
@@ -496,42 +492,9 @@ export default function Dashboard() {
         </div>
 
         {/* Revenue Chart + Top Packages */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-gutter mb-6">
-          <div className="lg:col-span-2">
-            <RevenueBarChart data={chartData} filterMonth={filterMonth} />
-          </div>
-          <div className="bg-surface-container-lowest rounded-xl p-4 md:p-6 premium-shadow">
-            <h3 className="font-display text-title-lg text-primary mb-1">Top Packages</h3>
-            <p className="font-body text-[10px] uppercase tracking-widest text-on-surface-variant mb-4">
-              By booking volume
-            </p>
-            {topPackages.length > 0 ? (
-              <ul className="space-y-4">
-                {topPackages.map(([pkg, count]) => (
-                  <li key={pkg}>
-                    <div className="flex justify-between font-body text-body-sm mb-1">
-                      <span>{pkg}</span>
-                      <span className="text-secondary font-bold">{Math.round((count / pkgTotal) * 100)}%</span>
-                    </div>
-                    <div className="h-1.5 bg-outline-variant rounded-full overflow-hidden">
-                      <div className="h-full bg-secondary rounded-full" style={{ width: `${(count / pkgTotal) * 100}%` }} />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="font-body text-body-sm text-on-surface-variant">No bookings in this period.</p>
-            )}
-            {filtered.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-outline-variant">
-                <p className="font-body text-[11px] uppercase text-on-surface-variant tracking-wider mb-2">Total Guests</p>
-                <p className="font-display text-headline-sm text-primary">
-                  {filtered.reduce((s, b) => s + (b.guestCount || 0), 0).toLocaleString("en-IN")}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <div className="mb-6">
+          <RevenueBarChart data={chartData} filterMonth={filterMonth} />
+</div>
 
         {/* Recent Bookings */}
       

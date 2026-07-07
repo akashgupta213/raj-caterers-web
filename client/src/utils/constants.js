@@ -4,7 +4,6 @@ export const NAV_LINKS = [
   { name: "Menu", path: "/menu" },
   { name: "Gallery", path: "/gallery" },
   { name: "Banquet Halls", path: "/banquet-halls" },
-  { name: "Packages", path: "/packages" },
   { name: "Reviews", path: "/reviews" },
   { name: "About", path: "/about" },
   { name: "Contact", path: "/contact" },

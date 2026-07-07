@@ -7,7 +7,6 @@ import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const FILTERS     = ["All", "Pending", "Confirmed", "In Progress", "Completed", "Cancelled"];
 const EVENT_TYPES = ["Wedding", "Engagement", "Birthday", "Corporate", "Private Dining", "Social Soiree", "Other"];
-const PACKAGES    = ["Basic", "Premium", "Royal", "Custom"];
 
 const FILTER_ACTIVE = {
   "All":         "border-secondary text-secondary",
@@ -80,7 +79,6 @@ function BookingDrawer({ booking, onClose, onUpdated }) {
     ["Email",            booking.clientEmail],
     ["Phone",            booking.clientPhone],
     ["Event Type",       booking.eventType],
-    ["Package",          booking.packageType],
     ["Date",             booking.eventDate ? new Date(booking.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" }) : "—"],
     ["Time",             booking.eventTime],
     ["Venue",            booking.venue],
@@ -244,7 +242,6 @@ function NewBookingModal({ onClose, onSuccess }) {
   const [form, setForm] = useState({
     clientName: "", clientEmail: "", clientPhone: "",
     eventType: "", eventDate: "", eventTime: "", venue: "",
-    guestCount: "", packageType: "Custom",
     estimatedBudget: "", specialRequests: "",
   });
   const [menuImages, setMenuImages] = useState([]); // { file, preview }[]
@@ -335,13 +332,6 @@ function NewBookingModal({ onClose, onSuccess }) {
                   className="w-full bg-transparent border-b border-outline py-2 font-body text-body-sm focus:outline-none focus:border-secondary transition">
                   <option value="">Select type</option>
                   {EVENT_TYPES.map((t) => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="font-body text-label-caps uppercase text-on-surface-variant text-[11px] block mb-1">Package</label>
-                <select value={form.packageType} onChange={(e) => set("packageType", e.target.value)}
-                  className="w-full bg-transparent border-b border-outline py-2 font-body text-body-sm focus:outline-none focus:border-secondary transition">
-                  {PACKAGES.map((p) => <option key={p}>{p}</option>)}
                 </select>
               </div>
               <div>
@@ -498,7 +488,7 @@ function BookingsTable({ rows, onStatusChange, onView, onDelete }) {
       <table className="w-full text-left border-collapse min-w-[900px]">
         <thead>
           <tr className="bg-surface-container-lowest">
-            {["Client", "Event", "Date", "Guests", "Package", "Amount", "Status", ""].map((h) => (
+            {["Client", "Event", "Date", "Guests", "Amount", "Status", ""].map((h) => (
               <th
                 key={h}
                 className="px-4 py-3.5 font-body text-[10px] uppercase tracking-widest text-on-surface-variant whitespace-nowrap border-b border-outline-variant"
@@ -525,7 +515,7 @@ function BookingsTable({ rows, onStatusChange, onView, onDelete }) {
                 {b.eventDate ? new Date(b.eventDate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" }) : "—"}
               </td>
               <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant">{b.guestCount ?? "—"}</td>
-              <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface-variant">{b.packageType}</td>
+            
               <td className="px-4 py-4 align-middle font-body text-body-sm text-on-surface font-medium whitespace-nowrap">
                 {b.totalAmount ? fmt(b.totalAmount) : b.estimatedBudget ? fmt(b.estimatedBudget) : "—"}
               </td>

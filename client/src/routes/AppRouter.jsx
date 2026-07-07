@@ -5,7 +5,7 @@ import Menu from "../pages/Menu";
 import Gallery from "../pages/Gallery";
 import BanquetHalls from "../pages/BanquetHalls";
 import BanquetHallDetail from "../pages/BanquetHallDetail";
-import Packages from "../pages/Packages";
+
 import EnquireNow from "../pages/EnquireNow";
 import Reviews from "../pages/Reviews";
 import About from "../pages/About";
@@ -41,7 +41,6 @@ export default function AppRouter() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/banquet-halls" element={<BanquetHalls />} />
           <Route path="/banquet-halls/:id" element={<BanquetHallDetail />} />
-          <Route path="/packages" element={<Packages />} />
           <Route path="/enquire" element={<EnquireNow />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/about" element={<About />} />
