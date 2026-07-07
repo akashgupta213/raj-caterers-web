@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/admin/Sidebar";
 import { fetchClients } from "../../utils/api";
 
@@ -264,6 +264,7 @@ export default function ClientDatabase() {
   const [search,  setSearch]  = useState("");
   const [sortField, setSortField] = useState("totalSpent");
   const [sortDir,   setSortDir]   = useState("desc");
+  const debounceRef = useRef(null);
 
   const load = (q = "") => {
     setLoading(true);
@@ -271,12 +272,13 @@ export default function ClientDatabase() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   const handleSearch = (e) => {
     const val = e.target.value;
     setSearch(val);
-    clearTimeout(window._cs);
-    window._cs = setTimeout(() => load(val), 400);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => load(val), 400);
   };
 
   const toggleSort = (field) => {

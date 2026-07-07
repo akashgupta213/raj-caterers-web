@@ -52,7 +52,7 @@ export default function Testimonial() {
               format_quote
             </span>
             <h3 className="font-display text-headline-md-mobile md:text-headline-md text-primary italic mb-10 leading-relaxed">
-  "Every event we host is a promise kept — from the first conversation to the last course served. Raj Caterers turned our dream wedding into a culinary masterpiece."
+  "Every event we host is a promise kept — from the first conversation to the last course served. Raj Caterers turned your dream wedding into a culinary masterpiece."
 </h3>
 <div className="flex flex-col items-center">
   <div className="w-16 h-16 rounded-full overflow-hidden mb-4 border-2 border-white shadow-md image-placeholder">

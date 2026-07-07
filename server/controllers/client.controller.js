@@ -2,6 +2,47 @@ const Client  = require("../models/Client.model");
 const Booking = require("../models/Booking.model");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
+/* Shape a raw Client document (with populated bookings) into what the
+   admin frontend expects — field names + computed dates. */
+const shapeClient = (client) => {
+  const bookings = (client.bookings || [])
+    .filter(Boolean)
+    .map((b) => ({
+      _id:             b._id,
+      status:          b.status,
+      eventType:       b.eventType,
+      eventDate:       b.eventDate,
+      packageType:     b.packageType,
+      totalAmount:     b.totalAmount,
+      estimatedBudget: b.estimatedBudget,
+    }));
+
+  const sortedDates = bookings
+    .map((b) => b.eventDate)
+    .filter(Boolean)
+    .sort((a, b) => new Date(a) - new Date(b));
+
+  const firstBookingDate = sortedDates[0] || null;
+  const lastBookingDate  = client.lastEventDate || sortedDates[sortedDates.length - 1] || null;
+
+  return {
+    _id:        client._id,
+    name:       client.name,
+    email:      client.email,
+    phone:      client.phone,
+    type:       client.type,
+    // aliases the admin UI reads:
+    clientName:  client.name,
+    clientEmail: client.email,
+    clientPhone: client.phone,
+    totalSpent:  client.totalSpend || 0,
+    bookingCount: bookings.length,
+    firstBookingDate,
+    lastBookingDate,
+    bookings,
+  };
+};
+
 // @desc    Get all clients
 // @route   GET /api/clients
 // @access  Private
@@ -21,12 +62,14 @@ const getAllClients = async (req, res) => {
 
     const total   = await Client.countDocuments(query);
     const clients = await Client.find(query)
+      .populate("bookings", "status eventType eventDate packageType totalAmount estimatedBudget")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
     return sendSuccess(res, 200, "Clients fetched", {
-      clients,
+      clients: clients.map(shapeClient),
       pagination: {
         total,
         page:       Number(page),
@@ -44,12 +87,12 @@ const getAllClients = async (req, res) => {
 // @access  Private
 const getClientById = async (req, res) => {
   try {
-    const client = await Client.findById(req.params.id);
+    const client = await Client.findById(req.params.id)
+      .populate("bookings", "status eventType eventDate packageType totalAmount estimatedBudget")
+      .lean();
     if (!client) return sendError(res, 404, "Client not found");
 
-    const bookings = await Booking.find({ client: client._id }).sort({ eventDate: -1 });
-
-    return sendSuccess(res, 200, "Client fetched", { client, bookings });
+    return sendSuccess(res, 200, "Client fetched", { client: shapeClient(client) });
   } catch (error) {
     return sendError(res, 500, error.message);
   }
