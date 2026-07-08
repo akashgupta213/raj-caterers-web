@@ -9,11 +9,11 @@ const { sendEmail } = require("../utils/sendEmail");
 const createBooking = async (req, res) => {
   try {
     const {
-  clientName, clientEmail, clientPhone,
-  eventType, eventDate, eventTime, venue,
-  guestCount, packageType, specialRequests,
-  dietaryNeeds, estimatedBudget, menuImages,
-} = req.body;
+      clientName, clientEmail, clientPhone,
+      eventType, eventDate, eventTime, venue,
+      guestCount, packageType, specialRequests,
+      dietaryNeeds, estimatedBudget, menuImages,
+    } = req.body;
 
     // Create or find client
     let client = await Client.findOne({ email: clientEmail });
@@ -32,12 +32,12 @@ const createBooking = async (req, res) => {
     }
 
     const booking = await Booking.create({
-  clientName, clientEmail, clientPhone,
-  eventType, eventDate, eventTime, venue,
-  guestCount, packageType, specialRequests,
-  dietaryNeeds, estimatedBudget, menuImages,
-  client: client._id,
-});
+      clientName, clientEmail, clientPhone,
+      eventType, eventDate, eventTime, venue,
+      guestCount, packageType, specialRequests,
+      dietaryNeeds, estimatedBudget, menuImages,
+      client: client._id,
+    });
 
     // Link booking to client
     client.bookings.push(booking._id);
@@ -45,8 +45,13 @@ const createBooking = async (req, res) => {
     client.lastEventDate = eventDate;
     await client.save();
 
-    // Send confirmation email to client
-    await sendEmail({
+    // Respond immediately — don't make the user wait on email delivery
+    sendSuccess(res, 201, "Booking created successfully", booking);
+
+    // Fire confirmation/notification emails AFTER responding.
+    // Errors here are logged only — they must never crash the server
+    // or attempt to send a second response.
+    sendEmail({
       to:      clientEmail,
       subject: "Booking Confirmed – Raj Caterers",
       template: "bookingConfirmation",
@@ -58,10 +63,9 @@ const createBooking = async (req, res) => {
         guestCount,
         bookingId: booking._id,
       },
-    });
+    }).catch((err) => console.error("Client confirmation email failed:", err.message));
 
-    // Notify admin
-    await sendEmail({
+    sendEmail({
       to:      process.env.EMAIL_USER,
       subject: `New Booking – ${eventType} | ${clientName}`,
       template: "adminBookingAlert",
@@ -71,9 +75,8 @@ const createBooking = async (req, res) => {
         venue, guestCount, packageType,
         bookingId: booking._id,
       },
-    });
+    }).catch((err) => console.error("Admin alert email failed:", err.message));
 
-    return sendSuccess(res, 201, "Booking created successfully", booking);
   } catch (error) {
     return sendError(res, 500, error.message);
   }
