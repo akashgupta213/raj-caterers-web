@@ -52,6 +52,7 @@ export default {
       fontFamily: {
         display: ["Playfair Display", "serif"],
         body: ["Montserrat", "sans-serif"],
+        rounded: ['Fredoka', 'sans-serif'],
       },
       fontSize: {
         "display-lg": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],

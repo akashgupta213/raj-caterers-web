@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,3 +11,5 @@ h1, h2, h3, h4 { font-family: "Playfair Display", serif; }
 .premium-shadow { box-shadow: 0 20px 40px rgba(214, 0, 108, 0.08); }
 .image-placeholder { display:flex; align-items:center; justify-content:center; background:#f6e1e7; color:#95626d; font-family:"Montserrat"; font-size:12px; letter-spacing:0.1em; font-weight:700; text-transform:uppercase; }
 input:focus, textarea:focus, select:focus { outline: none; border-bottom-color: #D6006C !important; }
+
+

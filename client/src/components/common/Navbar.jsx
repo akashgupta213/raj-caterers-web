@@ -25,7 +25,7 @@ export default function Navbar() {
                 to={l.path}
                 end
                 className={({ isActive }) =>
-                  `whitespace-nowrap font-body text-[13px] 2xl:text-sm pb-1 transition-all duration-300 ${
+                  `font-rounded whitespace-nowrap text-[13px] 2xl:text-sm pb-1 transition-all duration-300 ${
                     isActive
                       ? "text-secondary border-b-2 border-secondary"
                       : "text-on-surface-variant hover:text-primary"
@@ -67,7 +67,7 @@ export default function Navbar() {
               to={l.path}
               end
               onClick={() => setOpen(false)}
-              className="block px-3 py-2.5 rounded-lg font-body text-base text-on-surface-variant hover:text-secondary hover:bg-black/5 transition-colors"
+              className="font-rounded block px-3 py-2.5 rounded-lg text-base text-on-surface-variant hover:text-secondary hover:bg-black/5 transition-colors"
             >
               {l.name}
             </NavLink>
